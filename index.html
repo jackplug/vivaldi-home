@@ -44,7 +44,22 @@
       color: var(--accent);
       border-bottom: 1px solid var(--border);
       padding-bottom: 0.65rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+    .btn-small {
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-small:hover { color: #fff; border-color: var(--accent); }
+
     .weather-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -91,16 +106,23 @@
     }
     .news-item a:hover { color: var(--accent); }
     .news-meta { font-size: 0.75rem; color: var(--accent); margin-bottom: 0.25rem; }
-    .news-summary { font-size: 0.83rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.4; }
   </style>
 </head>
 <body>
   <div class="grid">
+    <!-- Column 1: Trains -->
     <div class="card">
-      <h2>🚆 Zeleneč Departures</h2>
+      <h2>
+        <span>🚆 Zeleneč Departures</span>
+        <span>
+          <a class="btn-small" href="https://spravazeleznic.cz" target="_blank">Live Board ↗</a>
+          <button class="btn-small" onclick="setGolemioKey()">API Key</button>
+        </span>
+      </h2>
       <div id="trains">Loading departures...</div>
     </div>
 
+    <!-- Column 2: Weather & Obec Zeleneč -->
     <div class="card">
       <h2>🌤️ Weather Forecast</h2>
       <div class="weather-grid" id="weather">
@@ -108,10 +130,14 @@
         <div class="weather-box">Loading Prague...</div>
       </div>
 
-      <h2>🏘️ Obec Zeleneč</h2>
+      <h2>
+        <span>🏘️ Obec Zeleneč</span>
+        <a class="btn-small" href="https://www.facebook.com/Zelenecobecoficialni/" target="_blank">Facebook ↗</a>
+      </h2>
       <div id="village">Loading village news...</div>
     </div>
 
+    <!-- Column 3: Czech News -->
     <div class="card">
       <h2>🇨🇿 Czech News (EN)</h2>
       <div id="news">Loading Czech news...</div>
@@ -119,45 +145,85 @@
   </div>
 
   <script>
+    // 1. Live Weather directly in Vivaldi (Open-Meteo)
     const weatherIcons = {
       0: "☀️ Clear", 1: "🌤️ Mostly clear", 2: "⛅ Partly cloudy", 3: "☁️ Overcast",
       45: "🌫️ Fog", 48: "🌫️ Rime fog", 51: "🌦️ Drizzle", 61: "🌧️ Rain",
       71: "❄️ Snow", 80: "🌦️ Showers", 95: "⛈️ Storm"
     };
 
-    function renderWeather(zel, prg) {
-      if (!zel || !prg) return;
-      document.getElementById("weather").innerHTML = `
+    async function getWeather(city, lat, lon) {
+      const url = `https://open-meteo.com{lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=Europe%2FPrague`;
+      const res = await fetch(url);
+      const d = await res.json();
+      const c = d.current;
+      return `
         <div class="weather-box">
-          <div class="weather-city">Zeleneč</div>
-          <div class="weather-temp">${zel.temp}°C</div>
-          <div class="weather-sub">${weatherIcons[zel.code] || "🌡️"} • Feels ${zel.feels}° • ${zel.wind} km/h</div>
-        </div>
-        <div class="weather-box">
-          <div class="weather-city">Prague</div>
-          <div class="weather-temp">${prg.temp}°C</div>
-          <div class="weather-sub">${weatherIcons[prg.code] || "🌡️"} • Feels ${prg.feels}° • ${prg.wind} km/h</div>
+          <div class="weather-city">${city}</div>
+          <div class="weather-temp">${Math.round(c.temperature_2m)}°C</div>
+          <div class="weather-sub">${weatherIcons[c.weather_code] || "🌡️"} • Feels ${Math.round(c.apparent_temperature)}° • ${Math.round(c.wind_speed_10m)} km/h</div>
         </div>`;
     }
 
+    Promise.all([
+      getWeather("Zeleneč", 50.130, 14.666),
+      getWeather("Prague", 50.075, 14.437)
+    ]).then(([zel, prg]) => {
+      document.getElementById("weather").innerHTML = zel + prg;
+    }).catch(err => {
+      document.getElementById("weather").innerHTML = `<div class="weather-box">Weather error: ${err.message}</div>`;
+    });
+
+    // 2. Live Zeleneč Trains via Golemio (stored locally in browser)
+    function setGolemioKey() {
+      const k = prompt("Paste your Golemio API Key (saved only in Vivaldi):");
+      if (k && k.trim()) {
+        localStorage.setItem("golemio_key", k.trim());
+        loadTrains();
+      }
+    }
+
+    function loadTrains() {
+      const key = localStorage.getItem("golemio_key");
+      if (!key) {
+        document.getElementById("trains").innerHTML = `<p style="color:var(--muted)">Click <strong>API Key</strong> above to connect live Golemio train times.</p>`;
+        return;
+      }
+      fetch("https://golemio.cz", {
+        headers: { "X-Access-Token": key }
+      })
+        .then(r => {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(d => {
+          const deps = d.departures || [];
+          document.getElementById("trains").innerHTML = deps.map(t => {
+            const line = t.route?.short_name || "Train";
+            const dest = t.trip?.headsign || "";
+            const time = (t.departure_timestamp?.predicted || "").slice(11, 16);
+            const delay = t.delay?.minutes || 0;
+            return `
+              <div class="train-row">
+                <div class="train-time">${time}</div>
+                <div class="train-info">
+                  <div class="train-dest">${dest}</div>
+                  <div class="train-num">Line ${line}</div>
+                </div>
+                <div class="${delay > 0 ? 'badge-delay' : 'badge-ok'}">${delay > 0 ? '+' + delay + ' min' : 'On time'}</div>
+              </div>`;
+          }).join("") || "<p style='color:var(--muted)'>No trains in next 2 hours.</p>";
+        })
+        .catch(err => {
+          document.getElementById("trains").innerHTML = `<p style="color:var(--muted)">Train feed error (${err.message}). Check API key or Vivaldi ad-blocker.</p>`;
+        });
+    }
+    loadTrains();
+
+    // 3. Load Village & Czech News from GitHub Action data.json
     fetch("./data.json?t=" + Date.now())
       .then(r => r.json())
       .then(d => {
-        if (d.weather && d.weather.zelenec && d.weather.prague) {
-          renderWeather(d.weather.zelenec, d.weather.prague);
-        }
-
-        document.getElementById("trains").innerHTML = (d.trains || []).map(t => `
-          <div class="train-row">
-            <div class="train-time">${t.time}</div>
-            <div class="train-info">
-              <div class="train-dest">${t.dest}</div>
-              <div class="train-num">${t.train}</div>
-            </div>
-            <div class="${t.delay > 0 ? 'badge-delay' : 'badge-ok'}">${t.delay > 0 ? '+' + t.delay + ' min' : 'On time'}</div>
-          </div>
-        `).join("") || "<p style='color:var(--muted)'>No departures listed right now.</p>";
-
         document.getElementById("village").innerHTML = (d.village || []).map(v => `
           <div class="news-item">
             <div class="news-meta">${v.date || "Obec Zeleneč"}</div>
@@ -169,20 +235,9 @@
           <div class="news-item">
             <div class="news-meta">${n.meta || "Czech News"}</div>
             <a href="${n.link}" target="_blank">${n.title}</a>
-            ${n.summary ? `<div class="news-summary">${n.summary}</div>` : ""}
           </div>
         `).join("") || "<p style='color:var(--muted)'>No Czech news found.</p>";
       });
-
-    Promise.all([
-      fetch("https://open-meteo.com").then(r => r.json()),
-      fetch("https://open-meteo.com").then(r => r.json())
-    ]).then(([z, p]) => {
-      renderWeather(
-        { temp: Math.round(z.current.temperature_2m), feels: Math.round(z.current.apparent_temperature), code: z.current.weather_code, wind: Math.round(z.current.wind_speed_10m) },
-        { temp: Math.round(p.current.temperature_2m), feels: Math.round(p.current.apparent_temperature), code: p.current.weather_code, wind: Math.round(p.current.wind_speed_10m) }
-      );
-    }).catch(() => {});
   </script>
 </body>
 </html>
