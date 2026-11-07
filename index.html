@@ -5,129 +5,186 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zeleneč Home</title>
   <style>
+    :root {
+      --bg: #0f1117;
+      --card: #181b24;
+      --border: #262a36;
+      --text: #e6e8ef;
+      --muted: #8b92a5;
+      --accent: #7aa2f7;
+      --green: #9ece6a;
+      --red: #f7768e;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #121212;
-      color: #eee;
-      margin: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
     }
     .grid {
+      max-width: 1400px;
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 1.5rem;
     }
     .card {
-      background: #1e1e1e;
-      padding: 1.25rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.4rem;
     }
     h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      color: #7aa2f7;
-      border-bottom: 1px solid #333;
-      padding-bottom: 0.5rem;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    li {
-      padding: 0.55rem 0;
-      border-bottom: 1px solid #2a2a2a;
+      margin: 0 0 1rem 0;
       font-size: 0.95rem;
-      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.65rem;
     }
-    li:last-child {
-      border-bottom: none;
+    /* Weather Styling */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
     }
-    a {
-      color: #c0caf5;
-      text-decoration: none;
+    .weather-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem;
     }
-    a:hover {
-      text-decoration: underline;
-    }
-    .weather-row {
+    .weather-city { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+    .weather-temp { font-size: 1.65rem; font-weight: 700; }
+    .weather-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* Train Rows */
+    .train-row {
       display: flex;
       justify-content: space-between;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #2a2a2a;
+      align-items: center;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
     }
-    .weather-row:last-child {
-      border-bottom: none;
+    .train-row:last-child { border-bottom: none; }
+    .train-time { font-weight: 700; font-size: 1.05rem; color: #fff; min-width: 52px; }
+    .train-info { flex: 1; padding: 0 0.75rem; }
+    .train-dest { font-weight: 500; font-size: 0.95rem; }
+    .train-num { font-size: 0.78rem; color: var(--muted); }
+    .badge-ok { color: var(--green); font-size: 0.8rem; font-weight: 600; }
+    .badge-delay { color: var(--red); font-size: 0.8rem; font-weight: 700; }
+
+    /* News & Village Items */
+    .news-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
     }
-    iframe {
-      width: 100%;
-      height: 360px;
-      border: none;
-      border-radius: 6px;
-      background: #fff;
+    .news-item:last-child { border-bottom: none; }
+    .news-item a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      display: block;
     }
+    .news-item a:hover { color: var(--accent); }
+    .news-meta { font-size: 0.75rem; color: var(--accent); margin-bottom: 0.25rem; }
+    .news-summary { font-size: 0.83rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.4; }
   </style>
 </head>
 <body>
   <div class="grid">
-    <!-- Column 1: Live Správa železnic Departure Board for Zeleneč -->
+    <!-- Column 1: Trains -->
     <div class="card">
-      <h2>🚆 Zeleneč Departures (Live)</h2>
-      <iframe src="https://spravazeleznic.cz" title="Zeleneč Train Departures"></iframe>
+      <h2>🚆 Zeleneč Departures</h2>
+      <div id="trains">Loading departures...</div>
     </div>
 
-    <!-- Column 2: Weather & Local Village -->
+    <!-- Column 2: Weather & Obec Zeleneč -->
     <div class="card">
-      <h2>🌤️ Weather</h2>
-      <div id="weather">Loading weather...</div>
+      <h2>🌤️ Weather Forecast</h2>
+      <div class="weather-grid" id="weather">
+        <div class="weather-box">Loading Zeleneč...</div>
+        <div class="weather-box">Loading Prague...</div>
+      </div>
 
-      <h2 style="margin-top: 1.5rem;">🏘️ Obec Zeleneč</h2>
-      <ul id="village"><li>Loading village news...</li></ul>
+      <h2>🏘️ Obec Zeleneč</h2>
+      <div id="village">Loading village news...</div>
     </div>
 
-    <!-- Column 3: Czech News in English -->
+    <!-- Column 3: Czech News -->
     <div class="card">
       <h2>🇨🇿 Czech News (EN)</h2>
-      <ul id="news"><li>Loading Czech news...</li></ul>
+      <div id="news">Loading Czech news...</div>
     </div>
   </div>
 
   <script>
-    // 1. Live Weather (Zeleneč & Prague) — Fixed array indexing w[0] and w[1]
-    fetch("https://open-meteo.com")
-      .then(r => r.json())
-      .then(w => {
-        const zel = w[0];
-        const prg = w[1];
-        document.getElementById("weather").innerHTML = `
-          <div class="weather-row">
-            <strong>Zeleneč</strong>
-            <span><strong>${zel.current.temperature_2m}°C</strong> (H: ${zel.daily.temperature_2m_max[0]}° / L: ${zel.daily.temperature_2m_min[0]}°)</span>
-          </div>
-          <div class="weather-row">
-            <strong>Prague</strong>
-            <span><strong>${prg.current.temperature_2m}°C</strong> (H: ${prg.daily.temperature_2m_max[0]}° / L: ${prg.daily.temperature_2m_min[0]}°)</span>
-          </div>`;
-      })
-      .catch(err => {
-        document.getElementById("weather").innerHTML = "<p>Weather error: " + err.message + "</p>";
-      });
+    const weatherIcons = {
+      0: "☀️ Clear", 1: "🌤️ Mostly clear", 2: "⛅ Partly cloudy", 3: "☁️ Overcast",
+      45: "🌫️ Fog", 48: "🌫️ Rime fog", 51: "🌦️ Light drizzle", 61: "🌧️ Rain",
+      71: "❄️ Snow", 80: "🌦️ Showers", 95: "⛈️ Thunderstorm"
+    };
 
-    // 2. Village & Czech News from GitHub Action data.json
+    async function loadWeatherCity(name, lat, lon) {
+      const url = `https://open-meteo.com{lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FPrague&forecast_days=1`;
+      const res = await fetch(url);
+      const d = await res.json();
+      const cond = weatherIcons[d.current.weather_code] || "🌡️";
+      return `
+        <div class="weather-box">
+          <div class="weather-city">${name}</div>
+          <div class="weather-temp">${Math.round(d.current.temperature_2m)}°C</div>
+          <div class="weather-sub">${cond} • H:${Math.round(d.daily.temperature_2m_max)}° L:${Math.round(d.daily.temperature_2m_min)}°</div>
+        </div>`;
+    }
+
+    Promise.all([
+      loadWeatherCity("Zeleneč", 50.130, 14.666),
+      loadWeatherCity("Prague", 50.075, 14.437)
+    ]).then(([zelHtml, prgHtml]) => {
+      document.getElementById("weather").innerHTML = zelHtml + prgHtml;
+    }).catch(() => {
+      document.getElementById("weather").innerHTML = "<div class='weather-box'>Weather unavailable</div>";
+    });
+
+    // Load Trains, Village News & Czech News from data.json
     fetch("./data.json?t=" + Date.now())
       .then(r => r.json())
       .then(d => {
-        document.getElementById("village").innerHTML = (d.village || []).map(v =>
-          `<li><a href="${v.link}" target="_blank">${v.title}</a></li>`
-        ).join("") || "<li>No village news found</li>";
+        // Trains
+        document.getElementById("trains").innerHTML = (d.trains || []).map(t => `
+          <div class="train-row">
+            <div class="train-time">${t.time}</div>
+            <div class="train-info">
+              <div class="train-dest">${t.dest}</div>
+              <div class="train-num">${t.train}</div>
+            </div>
+            <div class="${t.delay ? 'badge-delay' : 'badge-ok'}">${t.delay ? '+' + t.delay + ' min' : 'On time'}</div>
+          </div>
+        `).join("") || "<p style='color:var(--muted)'>No departures listed right now.</p>";
 
-        document.getElementById("news").innerHTML = (d.news || []).map(n =>
-          `<li><a href="${n.link}" target="_blank">${n.title}</a></li>`
-        ).join("") || "<li>No news found</li>";
-      })
-      .catch(() => {
-        document.getElementById("village").innerHTML = "<li>Waiting for data.json...</li>";
-        document.getElementById("news").innerHTML = "<li>Waiting for data.json...</li>";
+        // Village
+        document.getElementById("village").innerHTML = (d.village || []).map(v => `
+          <div class="news-item">
+            <div class="news-meta">${v.date || "Obec Zeleneč"}</div>
+            <a href="${v.link}" target="_blank">${v.title}</a>
+          </div>
+        `).join("") || "<p style='color:var(--muted)'>No village news found.</p>";
+
+        // Czech News
+        document.getElementById("news").innerHTML = (d.news || []).map(n => `
+          <div class="news-item">
+            <div class="news-meta">${n.meta || "Czech News"}</div>
+            <a href="${n.link}" target="_blank">${n.title}</a>
+            ${n.summary ? `<div class="news-summary">${n.summary}</div>` : ""}
+          </div>
+        `).join("") || "<p style='color:var(--muted)'>No Czech news found.</p>";
       });
   </script>
 </body>
