@@ -258,9 +258,11 @@
           <div class="news-item">
             <div class="news-meta">${v.date || "Obec Zeleneč"}</div>
             <a href="${v.link}" target="_blank">${v.title}</a>
-            ${v.cz && v.cz !== v.title ? `<div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${v.cz}</div>` : ""}
+            ${v.summary ? `<div style="font-size:0.83rem; color:var(--text); opacity:0.85; margin-top:0.25rem; line-height:1.4;">${v.summary}</div>` : ""}
+            ${v.cz && v.cz !== v.title ? `<div style="font-size:0.76rem; color:var(--muted); margin-top:0.2rem;">${v.cz}</div>` : ""}
           </div>
         `).join("") || "<p style='color:var(--muted)'>No village news found.</p>";
+
         
         document.getElementById("news").innerHTML = (d.news || []).map(n => `
           <div class="news-item">
