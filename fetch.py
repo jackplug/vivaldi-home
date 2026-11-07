@@ -1,4 +1,4 @@
-import json, re, requests, feedparser
+import json, requests, feedparser
 from datetime import datetime
 from bs4 import BeautifulSoup
 
@@ -8,35 +8,28 @@ data = {
     "updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 }
 
-# 1. Fetch English Czech News (Google News Czechia EN + Radio Prague fallback)
-news_feeds = [
-    ("Czech News", "https://google.com"),
-    ("Radio Prague", "https://english.radio.cz/rcz-rss/en")
-]
-for source_name, url in news_feeds:
-    try:
-        feed = feedparser.parse(url)
-        for entry in feed.entries[:8]:
-            title = entry.title.split(" - ")[0].strip()
-            pub_source = entry.title.split(" - ")[-1].strip() if " - " in entry.title else source_name
-            published = getattr(entry, "published", "")[:16]
-            data["news"].append({
-                "title": title,
-                "link": entry.link,
-                "meta": f"{pub_source} • {published}" if published else pub_source
-            })
-        if data["news"]:
-            break
-    except Exception as e:
-        print("News error:", e)
-
-# 2. Fetch Obec Zelenec News (from zelenec.cz/aktuality)
+# 1. Fetch English Czech News (Radio Prague International - confirmed working!)
 try:
-    vr = requests.get(
-        "https://www.zelenec.cz/aktuality",
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0"},
-        timeout=15
-    )
+    feed = feedparser.parse("https://radio.cz")
+    for entry in feed.entries[:8]:
+        published = getattr(entry, "published", "")[:16]
+        data["news"].append({
+            "title": entry.title,
+            "link": entry.link,
+            "meta": f"Radio Prague • {published}" if published else "Radio Prague"
+        })
+except Exception as e:
+    print("News error:", e)
+
+# 2. Fetch Obec Zelenec News with full browser headers
+try:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "cs-CZ,cs;q=0.9,en;q=0.8",
+        "Referer": "https://www.zelenec.cz/"
+    }
+    vr = requests.get("https://www.zelenec.cz/aktuality", headers=headers, timeout=15)
     soup = BeautifulSoup(vr.text, "html.parser")
     seen = set()
     for a in soup.find_all("a", href=True):
@@ -58,5 +51,3 @@ except Exception as e:
 
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
-
-print(f"Done -> village: {len(data['village'])}, news: {len(data['news'])}")
