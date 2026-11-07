@@ -1,36 +1,62 @@
 {
   "village": [
     {
-      "title": "Ohlášení nedostatků",
-      "link": "https://zelenec.cz/ohlaseni-nedostatku",
-      "date": "Obec Zeleneč"
-    },
-    {
       "title": "Plavání pro občany Zelenče všech věkových kategorií",
       "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1000-plavani-pro-obcany-zelence-vsech-vekovych-kategorii/",
-      "date": "Obec Zeleneč"
+      "date": "8. 11. 2026"
     },
     {
       "title": "Lampionový průvod",
       "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1004-lampionovy-pruvod/",
-      "date": "Obec Zeleneč"
+      "date": "9. 11. 2026"
     },
     {
       "title": "Trhy v Zelenči každý pátek!",
       "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/997-trhy-v-zelenci-kazdy-patek/",
-      "date": "Obec Zeleneč"
-    },
-    {
-      "title": "Plavání pro občany Zelenče všech věkových kategorií",
-      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1001-plavani-pro-obcany-zelence-vsech-vekovych-kategorii/",
-      "date": "Obec Zeleneč"
-    },
-    {
-      "title": "Trhy v Zelenči každý pátek!",
-      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/998-trhy-v-zelenci-kazdy-patek/",
-      "date": "Obec Zeleneč"
+      "date": "13. 11. 2026"
     }
   ],
-  "news": [],
-  "updated": "2026-11-07 21:20 UTC"
+  "news": [
+    {
+      "title": "Nearly 1,000 people run through Prague in support of public service media",
+      "link": "https://english.radio.cz/nearly-1000-people-run-through-prague-support-public-service-media-8902014",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Festival 4+4 Days in Motion opens in Prague with Swiss multimedia performance",
+      "link": "https://english.radio.cz/festival-44-days-motion-opens-prague-swiss-multimedia-performance-8902013",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Weather forecast",
+      "link": "https://english.radio.cz/weather-forecast-8902012",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Czech government to discuss giving critical infrastructure operators powers to disable drones",
+      "link": "https://english.radio.cz/czech-government-discuss-giving-critical-infrastructure-operators-powers-disable-8902007",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Temperatures in Czechia drop to below -14°C overnight",
+      "link": "https://english.radio.cz/temperatures-czechia-drop-below-14degc-overnight-8902006",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Czech women’s ice hockey team beat Austria 4-1 in World Championship opener",
+      "link": "https://english.radio.cz/czech-womens-ice-hockey-team-beat-austria-4-1-world-championship-opener-8901997",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Onsemi cancels planned CZK43.5bn expansion in Rožnov",
+      "link": "https://english.radio.cz/onsemi-cancels-planned-czk435bn-expansion-roznov-8901996",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Czech and Hungarian presidents to discuss energy and V4 cooperation in Prague",
+      "link": "https://english.radio.cz/czech-and-hungarian-presidents-discuss-energy-and-v4-cooperation-prague-8901985",
+      "meta": "Radio Prague • Fri, 06 Nov 2026"
+    }
+  ],
+  "updated": "2026-11-07 21:26 UTC"
 }
