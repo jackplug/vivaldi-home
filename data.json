@@ -1,17 +1,20 @@
 {
   "village": [
     {
-      "title": "Plavání pro občany Zelenče všech věkových kategorií",
+      "title": "Swimming for citizens of Zelenče of all ages",
+      "cz": "Plavání pro občany Zelenče všech věkových kategorií",
       "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1000-plavani-pro-obcany-zelence-vsech-vekovych-kategorii/",
       "date": "8. 11. 2026"
     },
     {
-      "title": "Lampionový průvod",
+      "title": "Lantern parade",
+      "cz": "Lampionový průvod",
       "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1004-lampionovy-pruvod/",
       "date": "9. 11. 2026"
     },
     {
-      "title": "Trhy v Zelenči každý pátek!",
+      "title": "Markets in Zelenč every Friday!",
+      "cz": "Trhy v Zelenči každý pátek!",
       "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/997-trhy-v-zelenci-kazdy-patek/",
       "date": "13. 11. 2026"
     }
@@ -58,5 +61,5 @@
       "meta": "Radio Prague • Fri, 06 Nov 2026"
     }
   ],
-  "updated": "2026-11-07 21:26 UTC"
+  "updated": "2026-11-07 21:32 UTC"
 }
