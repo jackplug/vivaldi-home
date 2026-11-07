@@ -33,17 +33,22 @@ def translate_cs_to_en(text):
             timeout=10
         )
         if r.status_code == 200:
-            chunks = r.json().pop(0)
-            translated = "".join(part.pop(0) for part in chunks if part and part)
+            raw = r.json()
+            if isinstance(raw, list) and len(raw) > 0 and isinstance(raw.pop(0), list):
+                pass
+            # Re-parse cleanly without mutating
+            raw = r.json()
+            sentences = raw[0] if isinstance(raw, list) and raw else []
+            translated = "".join(s[0] for s in sentences if isinstance(s, list) and s and isinstance(s[0], str))
             if translated.strip():
                 return translated.strip()
     except Exception as e:
         print("Translate error:", e)
     return text
 
-# 1. Fetch English Czech News (Radio Prague via feedparser + Google News EN fallback)
+# 1. Fetch English Czech News
 rp_url = "https://" + "english.radio.cz" + "/rcz-rss/en"
-gn_url = "https://" + "news.google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
+gn_url = "https://" + "://google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
 
 for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
     try:
@@ -53,7 +58,7 @@ for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
             raw_title = entry.title.strip()
             if source_name == "Czech News" and " - " in raw_title:
                 parts = raw_title.rsplit(" - ", 1)
-                title, pub = parts.pop(0), parts.pop(0)
+                title, pub = parts[0], parts[1]
             else:
                 title, pub = raw_title, source_name
             published = getattr(entry, "published", "")[:16]
@@ -70,7 +75,7 @@ for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
 
 # 2. Fetch Obec Zelenec News + Perex + Translate Both to English
 try:
-    vr = requests.get("https://www.zelenec.cz/aktuality", headers=HEADERS, timeout=15)
+    vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
     soup = BeautifulSoup(vr.text, "html.parser")
     new_village = []
     seen_titles = set()
@@ -79,7 +84,7 @@ try:
     skip_words = {
         "přeskočit", "zastupitelstvo", "výbory", "veřejné zakázky", "hospodaření",
         "vyhlášky", "povinně", "mstětice", "kontakty", "úřední deska", "aktuality",
-        "kalendář", "fotogalerie", "ohlášení nedostatků"
+        "kalendář", "fotogalerie", "ohlášení nedostatků", "život v zelenči"
     }
 
     for a in container.find_all("a", href=True):
@@ -104,13 +109,11 @@ try:
                 m = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", card_text)
                 if m:
                     date_str = m.group(1)
-                    # Extract short description from <p> or remaining card text
                     p_tag = card.find("p")
                     if p_tag:
                         perex_cz = " ".join(p_tag.get_text().split())
                     else:
                         remainder = card_text.replace(date_str, "").replace(title, "").strip()
-                        # Remove trailing view-count numbers if present
                         remainder = re.sub(r"\s+\d+$", "", remainder).strip()
                         if 8 < len(remainder) < 220:
                             perex_cz = remainder
@@ -120,7 +123,7 @@ try:
             clean_cz = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
             if perex_cz == clean_cz:
                 perex_cz = ""
-            link = "https://www.zelenec.cz" + href
+            link = "https://zelenec.cz" + href
 
             if clean_cz not in seen_titles and len(clean_cz) > 10:
                 seen_titles.add(clean_cz)
