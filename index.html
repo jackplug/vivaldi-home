@@ -152,11 +152,17 @@
     const GOLEMIO_URL = ["https:/", "api.golemio.cz", "v2", "pid", "departureboards"].join("/");
 
     // 1. Live Weather (Zeleneč & Prague)
-    const weatherIcons = {
-      0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
-      45: "🌫️", 48: "🌫️", 51: "🌦️", 61: "🌧️",
-      71: "❄️", 80: "🌦️", 95: "⛈️"
-    };
+    function getWeatherEmoji(code) {
+      if (code === 0) return "☀️";
+      if (code === 1 || code === 2) return "⛅";
+      if (code === 3) return "☁️";
+      if (code === 45 || code === 48) return "〰️"; // Fog (replaces the square 🌫️ icon)
+      if (code >= 51 && code <= 57) return "🌦️";
+      if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️";
+      if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "❄️";
+      if (code >= 95) return "⛈️";
+      return "⛅";
+    }
 
     async function getWeather(city, lat, lon) {
       const host = "api." + "open-meteo" + ".com";
@@ -170,14 +176,15 @@
       for (let i = 0; i < daily.time.length; i++) {
         const dateObj = new Date(daily.time.at(i) + "T12:00:00");
         const dayName = i === 0 ? "Today" : dateObj.toLocaleDateString("en-GB", { weekday: "short" });
-        const icon = weatherIcons[daily.weather_code.at(i)] || "🌡️";
+        const icon = getWeatherEmoji(daily.weather_code.at(i));
         const hi = Math.round(daily.temperature_2m_max.at(i));
         const lo = Math.round(daily.temperature_2m_min.at(i));
-        forecastRows += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; padding:3px 0; border-top:1px solid rgba(255,255,255,0.06);"><span style="color:var(--muted); width:44px;">${dayName}</span><span>${icon}</span><span><strong>${hi}°</strong> <span style="color:var(--muted)">/ ${lo}°</span></span></div>`;
+        forecastRows += `<div style="display:grid; grid-template-columns:46px 26px 1fr; align-items:center; font-size:0.8rem; padding:4px 0; border-top:1px solid rgba(255,255,255,0.06); font-variant-numeric:tabular-nums;"><span style="color:var(--muted);">${dayName}</span><span style="text-align:center;">${icon}</span><span style="text-align:right;"><strong>${hi}°</strong> <span style="color:var(--muted)">/ ${lo}°</span></span></div>`;
       }
 
-      return `<div class="weather-box"><div class="weather-city">${city}</div><div class="weather-temp">${Math.round(c.temperature_2m)}°C</div><div class="weather-sub" style="margin-bottom:0.65rem;">${weatherIcons[c.weather_code] || "🌡️"} Feels ${Math.round(c.apparent_temperature)}° • ${Math.round(c.wind_speed_10m)} km/h</div>${forecastRows}</div>`;
+      return `<div class="weather-box"><div class="weather-city">${city}</div><div class="weather-temp">${Math.round(c.temperature_2m)}°C</div><div class="weather-sub" style="margin-bottom:0.65rem;">${getWeatherEmoji(c.weather_code)} Feels ${Math.round(c.apparent_temperature)}° • ${Math.round(c.wind_speed_10m)} km/h</div>${forecastRows}</div>`;
     }
+
 
     Promise.all([
       getWeather("Zeleneč", 50.130, 14.666),
