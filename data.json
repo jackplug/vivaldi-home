@@ -1,11 +1,46 @@
 {
-  "trains": [],
   "village": [],
-  "news": [],
-  "weather": {},
-  "errors": [
-    "Weather (zelenec): Expecting value: line 1 column 1 (char 0)",
-    "Weather (prague): Expecting value: line 1 column 1 (char 0)"
+  "news": [
+    {
+      "title": "Nearly 1,000 people run through Prague in support of public service media",
+      "link": "https://english.radio.cz/nearly-1000-people-run-through-prague-support-public-service-media-8902014",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Festival 4+4 Days in Motion opens in Prague with Swiss multimedia performance",
+      "link": "https://english.radio.cz/festival-44-days-motion-opens-prague-swiss-multimedia-performance-8902013",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Weather forecast",
+      "link": "https://english.radio.cz/weather-forecast-8902012",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Czech government to discuss giving critical infrastructure operators powers to disable drones",
+      "link": "https://english.radio.cz/czech-government-discuss-giving-critical-infrastructure-operators-powers-disable-8902007",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Temperatures in Czechia drop to below -14°C overnight",
+      "link": "https://english.radio.cz/temperatures-czechia-drop-below-14degc-overnight-8902006",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Czech women’s ice hockey team beat Austria 4-1 in World Championship opener",
+      "link": "https://english.radio.cz/czech-womens-ice-hockey-team-beat-austria-4-1-world-championship-opener-8901997",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Onsemi cancels planned CZK43.5bn expansion in Rožnov",
+      "link": "https://english.radio.cz/onsemi-cancels-planned-czk435bn-expansion-roznov-8901996",
+      "meta": "Radio Prague • Sat, 07 Nov 2026"
+    },
+    {
+      "title": "Czech and Hungarian presidents to discuss energy and V4 cooperation in Prague",
+      "link": "https://english.radio.cz/czech-and-hungarian-presidents-discuss-energy-and-v4-cooperation-prague-8901985",
+      "meta": "Radio Prague • Fri, 06 Nov 2026"
+    }
   ],
-  "updated": "2026-11-07 20:51 UTC"
+  "updated": "2026-11-07 20:56 UTC"
 }
