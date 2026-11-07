@@ -128,7 +128,10 @@
         <span>🌤️ Weather Forecast</span>
         <a class="btn-small" href="https://yr.no" target="_blank">10-Day (Yr.no) ↗</a>
       </h2>
-
+      <div class="weather-grid" id="weather">
+        <div class="weather-box">Loading Zeleneč...</div>
+        <div class="weather-box">Loading Prague...</div>
+      </div>
 
       <h2>
         <span>🏘️ Obec Zeleneč</span>
@@ -157,12 +160,8 @@
 
     async function getWeather(city, lat, lon) {
       const host = "api." + "open-meteo" + ".com";
-      const url = "https://" + host + "/v1/forecast?latitude=" + lat + "&longitude=" + lon +
-        "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m" +
-        "&daily=weather_code,temperature_2m_max,temperature_2m_min" +
-        "&timezone=Europe%2FPrague&forecast_days=5";
-
-      const res = await fetch(url);
+      const qs = "latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FPrague&forecast_days=5";
+      const res = await fetch("https://" + host + "/v1/forecast?" + qs);
       const d = await res.json();
       const c = d.current;
       const daily = d.daily;
@@ -174,23 +173,10 @@
         const icon = weatherIcons[daily.weather_code.at(i)] || "🌡️";
         const hi = Math.round(daily.temperature_2m_max.at(i));
         const lo = Math.round(daily.temperature_2m_min.at(i));
-        forecastRows += `
-          <div style="display:flex; justify-content:space-between; font-size:0.8rem; padding:3px 0; border-top:1px solid rgba(255,255,255,0.06);">
-            <span style="color:var(--muted); width:44px;">${dayName}</span>
-            <span>${icon}</span>
-            <span><strong>${hi}°</strong> <span style="color:var(--muted)">/ ${lo}°</span></span>
-          </div>`;
+        forecastRows += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; padding:3px 0; border-top:1px solid rgba(255,255,255,0.06);"><span style="color:var(--muted); width:44px;">${dayName}</span><span>${icon}</span><span><strong>${hi}°</strong> <span style="color:var(--muted)">/ ${lo}°</span></span></div>`;
       }
 
-      return `
-        <div class="weather-box">
-          <div class="weather-city">${city}</div>
-          <div class="weather-temp">${Math.round(c.temperature_2m)}°C</div>
-          <div class="weather-sub" style="margin-bottom:0.65rem;">
-            ${weatherIcons[c.weather_code] || "🌡️"} Feels ${Math.round(c.apparent_temperature)}° • ${Math.round(c.wind_speed_10m)} km/h
-          </div>
-          ${forecastRows}
-        </div>`;
+      return `<div class="weather-box"><div class="weather-city">${city}</div><div class="weather-temp">${Math.round(c.temperature_2m)}°C</div><div class="weather-sub" style="margin-bottom:0.65rem;">${weatherIcons[c.weather_code] || "🌡️"} Feels ${Math.round(c.apparent_temperature)}° • ${Math.round(c.wind_speed_10m)} km/h</div>${forecastRows}</div>`;
     }
 
     Promise.all([
