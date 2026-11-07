@@ -1,5 +1,36 @@
 {
-  "village": [],
+  "village": [
+    {
+      "title": "Ohlášení nedostatků",
+      "link": "https://zelenec.cz/ohlaseni-nedostatku",
+      "date": "Obec Zeleneč"
+    },
+    {
+      "title": "Plavání pro občany Zelenče všech věkových kategorií",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1000-plavani-pro-obcany-zelence-vsech-vekovych-kategorii/",
+      "date": "Obec Zeleneč"
+    },
+    {
+      "title": "Lampionový průvod",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1004-lampionovy-pruvod/",
+      "date": "Obec Zeleneč"
+    },
+    {
+      "title": "Trhy v Zelenči každý pátek!",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/997-trhy-v-zelenci-kazdy-patek/",
+      "date": "Obec Zeleneč"
+    },
+    {
+      "title": "Plavání pro občany Zelenče všech věkových kategorií",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1001-plavani-pro-obcany-zelence-vsech-vekovych-kategorii/",
+      "date": "Obec Zeleneč"
+    },
+    {
+      "title": "Trhy v Zelenči každý pátek!",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/998-trhy-v-zelenci-kazdy-patek/",
+      "date": "Obec Zeleneč"
+    }
+  ],
   "news": [],
-  "updated": "2026-11-07 21:17 UTC"
+  "updated": "2026-11-07 21:20 UTC"
 }
