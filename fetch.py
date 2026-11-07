@@ -22,6 +22,8 @@ HEADERS = {
 }
 
 def translate_cs_to_en(text):
+    if not text:
+        return ""
     try:
         host = "translate." + "googleapis" + ".com"
         url = "https://" + host + "/translate_a/single"
@@ -31,8 +33,8 @@ def translate_cs_to_en(text):
             timeout=10
         )
         if r.status_code == 200:
-            chunks = r.json()[0]
-            translated = "".join(part[0] for part in chunks if part and part[0])
+            chunks = r.json().pop(0)
+            translated = "".join(part.pop(0) for part in chunks if part and part)
             if translated.strip():
                 return translated.strip()
     except Exception as e:
@@ -41,7 +43,7 @@ def translate_cs_to_en(text):
 
 # 1. Fetch English Czech News (Radio Prague via feedparser + Google News EN fallback)
 rp_url = "https://" + "english.radio.cz" + "/rcz-rss/en"
-gn_url = "https://" + "://google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
+gn_url = "https://" + "news.google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
 
 for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
     try:
@@ -51,7 +53,7 @@ for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
             raw_title = entry.title.strip()
             if source_name == "Czech News" and " - " in raw_title:
                 parts = raw_title.rsplit(" - ", 1)
-                title, pub = parts[0], parts[1]
+                title, pub = parts.pop(0), parts.pop(0)
             else:
                 title, pub = raw_title, source_name
             published = getattr(entry, "published", "")[:16]
@@ -66,9 +68,9 @@ for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
     except Exception as e:
         print(f"News error ({source_name}):", e)
 
-# 2. Fetch Obec Zelenec News + Translate to English
+# 2. Fetch Obec Zelenec News + Perex + Translate Both to English
 try:
-    vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
+    vr = requests.get("https://www.zelenec.cz/aktuality", headers=HEADERS, timeout=15)
     soup = BeautifulSoup(vr.text, "html.parser")
     new_village = []
     seen_titles = set()
@@ -93,25 +95,41 @@ try:
             and "page=" not in href
         ):
             date_str = "Obec Zeleneč"
-            parent = a.find_parent(["article", "li", "div"])
+            perex_cz = ""
+            card = a.find_parent(["article", "li", "div"])
             for _ in range(3):
-                if not parent:
+                if not card:
                     break
-                m = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", parent.get_text(" ", strip=True))
+                card_text = " ".join(card.get_text(" ", strip=True).split())
+                m = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", card_text)
                 if m:
                     date_str = m.group(1)
+                    # Extract short description from <p> or remaining card text
+                    p_tag = card.find("p")
+                    if p_tag:
+                        perex_cz = " ".join(p_tag.get_text().split())
+                    else:
+                        remainder = card_text.replace(date_str, "").replace(title, "").strip()
+                        # Remove trailing view-count numbers if present
+                        remainder = re.sub(r"\s+\d+$", "", remainder).strip()
+                        if 8 < len(remainder) < 220:
+                            perex_cz = remainder
                     break
-                parent = parent.parent
+                card = card.parent
 
             clean_cz = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
-            link = "https://zelenec.cz" + href
+            if perex_cz == clean_cz:
+                perex_cz = ""
+            link = "https://www.zelenec.cz" + href
 
             if clean_cz not in seen_titles and len(clean_cz) > 10:
                 seen_titles.add(clean_cz)
                 en_title = translate_cs_to_en(clean_cz)
+                en_perex = translate_cs_to_en(perex_cz) if perex_cz else ""
                 new_village.append({
                     "title": en_title,
                     "cz": clean_cz,
+                    "summary": en_perex,
                     "link": link,
                     "date": date_str
                 })
