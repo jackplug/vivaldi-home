@@ -2,48 +2,197 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zeleneč Home</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #121212; color: #eee; margin: 2rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
-    .card { background: #1e1e1e; padding: 1.25rem; border-radius: 10px; }
-    h2 { margin-top: 0; font-size: 1.1rem; color: #7aa2f7; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
-    ul { list-style: none; padding: 0; margin: 0; }
-    li { padding: 0.5rem 0; border-bottom: 1px solid #2a2a2a; font-size: 0.95rem; }
-    a { color: #c0caf5; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .delay { color: #f7768e; font-weight: bold; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #121212;
+      color: #eee;
+      margin: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 1.25rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #7aa2f7;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      padding: 0.55rem 0;
+      border-bottom: 1px solid #2a2a2a;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+    a {
+      color: #c0caf5;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .delay {
+      color: #f7768e;
+      font-weight: bold;
+    }
+    .ontime {
+      color: #9ece6a;
+      font-size: 0.85rem;
+    }
+    .weather-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .weather-row:last-child {
+      border-bottom: none;
+    }
+    .btn-small {
+      background: #2a2a2a;
+      color: #aaa;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .btn-small:hover {
+      color: #fff;
+      border-color: #7aa2f7;
+    }
   </style>
 </head>
 <body>
   <div class="grid">
-    <div class="card"><h2>🚆 Zeleneč Departures</h2><ul id="trains">Loading...</ul></div>
-    <div class="card"><h2>🌤️ Weather</h2><div id="weather">Loading...</div><h2 style="margin-top:1.5rem">🏘️ Obec Zeleneč</h2><ul id="village"></ul></div>
-    <div class="card"><h2>🇨🇿 Czech News (EN)</h2><ul id="news"></ul></div>
+    <!-- Column 1: Live Trains -->
+    <div class="card">
+      <h2>
+        <span>🚆 Zeleneč Departures</span>
+        <button class="btn-small" onclick="resetKey()">Key</button>
+      </h2>
+      <ul id="trains"><li>Loading live trains...</li></ul>
+    </div>
+
+    <!-- Column 2: Weather & Local Village -->
+    <div class="card">
+      <h2>🌤️ Weather</h2>
+      <div id="weather">Loading weather...</div>
+
+      <h2 style="margin-top: 1.5rem;">🏘️ Obec Zeleneč</h2>
+      <ul id="village"><li>Loading village news...</li></ul>
+    </div>
+
+    <!-- Column 3: Czech News in English -->
+    <div class="card">
+      <h2>🇨🇿 Czech News (EN)</h2>
+      <ul id="news"><li>Loading Czech news...</li></ul>
+    </div>
   </div>
+
   <script>
-    // Load Weather Live
+    function resetKey() {
+      localStorage.removeItem("golemio_key");
+      location.reload();
+    }
+
+    // 1. Live Trains from Golemio (using key stored ONLY in your browser)
+    let apiKey = localStorage.getItem("golemio_key");
+    if (!apiKey) {
+      apiKey = prompt("Enter your Golemio API Key (stored only locally in Vivaldi):");
+      if (apiKey) localStorage.setItem("golemio_key", apiKey.trim());
+    }
+
+    if (apiKey) {
+      fetch("https://golemio.cz", {
+        headers: { "X-Access-Token": apiKey }
+      })
+        .then(r => {
+          if (r.status === 401 || r.status === 403) {
+            localStorage.removeItem("golemio_key");
+            throw new Error("Invalid API key — click 'Key' to re-enter");
+          }
+          if (!r.ok) throw new Error("Golemio HTTP " + r.status);
+          return r.json();
+        })
+        .then(d => {
+          const deps = d.departures || [];
+          document.getElementById("trains").innerHTML = deps.map(t => {
+            const line = t.route?.short_name || "?";
+            const dest = t.trip?.headsign || "";
+            const time = (t.departure_timestamp?.predicted || "").slice(11, 16);
+            const delay = t.delay?.minutes || 0;
+            const badge = delay > 0
+              ? `<span class="delay">(+${delay}m)</span>`
+              : `<span class="ontime">(on time)</span>`;
+            return `<li><strong>${line}</strong> → ${dest} at <strong>${time}</strong> ${badge}</li>`;
+          }).join("") || "<li>No upcoming trains in next 2 hours</li>";
+        })
+        .catch(err => {
+          document.getElementById("trains").innerHTML = `<li>${err.message}</li>`;
+        });
+    } else {
+      document.getElementById("trains").innerHTML = "<li>No API key set — click 'Key' above to enter</li>";
+    }
+
+    // 2. Live Weather (Zeleneč & Prague)
     fetch("https://open-meteo.com")
-      .then(r => r.json()).then(w => {
+      .then(r => r.json())
+      .then(w => {
+        const zel = w[0];
+        const prg = w[1];
         document.getElementById("weather").innerHTML = `
-          <p><strong>Zeleneč:</strong> ${w[0].current.temperature_2m}°C</p>
-          <p><strong>Prague:</strong> ${w[1].current.temperature_2m}°C</p>`;
+          <div class="weather-row">
+            <strong>Zeleneč</strong>
+            <span><strong>${zel.current.temperature_2m}°C</strong> (H: ${zel.daily.temperature_2m_max[0]}° / L: ${zel.daily.temperature_2m_min[0]}°)</span>
+          </div>
+          <div class="weather-row">
+            <strong>Prague</strong>
+            <span><strong>${prg.current.temperature_2m}°C</strong> (H: ${prg.daily.temperature_2m_max[0]}° / L: ${prg.daily.temperature_2m_min[0]}°)</span>
+          </div>`;
+      })
+      .catch(() => {
+        document.getElementById("weather").innerHTML = "<p>Could not load weather</p>";
       });
 
-    // Load Data from GitHub Bot
-    fetch("./data.json?t=" + Date.now()).then(r => r.json()).then(d => {
-      document.getElementById("trains").innerHTML = d.trains.map(t =>
-        `<li><strong>${t.line}</strong> → ${t.dest} at <strong>${t.time}</strong> ${t.delay > 0 ? `<span class="delay">(+${t.delay}m)</span>` : ''}</li>`
-      ).join("") || "<li>No upcoming trains</li>";
+    // 3. Village & Czech News from GitHub Action data.json
+    fetch("./data.json?t=" + Date.now())
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById("village").innerHTML = (d.village || []).map(v =>
+          `<li><a href="${v.link}" target="_blank">${v.title}</a></li>`
+        ).join("") || "<li>No village news found</li>";
 
-      document.getElementById("village").innerHTML = d.village.map(v =>
-        `<li><a href="${v.link}" target="_blank">${v.title}</a></li>`
-      ).join("");
-
-      document.getElementById("news").innerHTML = d.news.map(n =>
-        `<li><a href="${n.link}" target="_blank">${n.title}</a></li>`
-      ).join("");
-    });
+        document.getElementById("news").innerHTML = (d.news || []).map(n =>
+          `<li><a href="${n.link}" target="_blank">${n.title}</a></li>`
+        ).join("") || "<li>No news found</li>";
+      })
+      .catch(() => {
+        document.getElementById("village").innerHTML = "<li>Waiting for data.json...</li>";
+        document.getElementById("news").innerHTML = "<li>Waiting for data.json...</li>";
+      });
   </script>
 </body>
 </html>
