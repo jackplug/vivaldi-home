@@ -11,12 +11,12 @@ data = {
     "updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 }
 
-HEADERS = {
-    "User-Agent": "VivaldiHomeDashboard/1.0 (https://github.com)",
-    "Accept": "*/*"
+MET_HEADERS = {"User-Agent": "VivaldiHomeDashboard/1.0 ://github.com"}
+WEB_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
 }
 
-# 1. Weather via Norwegian Meteorological Institute (met.no - official, accurate, allows GitHub Actions)
+# 1. Weather via api.met.no (using params dict so URL cannot be mangled)
 symbol_map = {
     "clearsky": 0, "fair": 1, "partlycloudy": 2, "cloudy": 3,
     "fog": 45, "lightrain": 51, "rain": 61, "heavyrain": 61,
@@ -25,8 +25,9 @@ symbol_map = {
 for key, lat, lon in [("zelenec", 50.130, 14.666), ("prague", 50.075, 14.437)]:
     try:
         wr = requests.get(
-            f"https://met.no{lat}&lon={lon}",
-            headers=HEADERS,
+            "https://met.no",
+            params={"lat": lat, "lon": lon},
+            headers=MET_HEADERS,
             timeout=15
         )
         wr.raise_for_status()
@@ -37,20 +38,21 @@ for key, lat, lon in [("zelenec", 50.130, 14.666), ("prague", 50.075, 14.437)]:
             "temp": round(details.get("air_temperature", 0)),
             "feels": round(details.get("air_temperature", 0)),
             "code": symbol_map.get(sym, 3),
-            "wind": round(details.get("wind_speed", 0) * 3.6)  # m/s -> km/h
+            "wind": round(details.get("wind_speed", 0) * 3.6)
         }
     except Exception as e:
         data["errors"].append(f"Weather ({key}): {e}")
 
-# 2. English Czech News (Prague Morning RSS + Radio Prague fallback)
+# 2. English Czech News (Prague Morning + Brno Daily + Expats.cz via bytes)
 for source_name, url in [
     ("Prague Morning", "https://praguemorning.cz"),
-    ("Radio Prague", "https://radio.cz")
+    ("Brno Daily", "https://brnodaily.com"),
+    ("Expats.cz", "https://expats.cz")
 ]:
     try:
-        nr = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
-        if nr.status_code == 200 and len(nr.text) > 200:
-            feed = feedparser.parse(nr.text)
+        nr = requests.get(url, headers=WEB_HEADERS, timeout=15)
+        if nr.status_code == 200:
+            feed = feedparser.parse(nr.content)
             for entry in feed.entries[:7]:
                 raw_summary = BeautifulSoup(getattr(entry, "summary", ""), "html.parser").get_text(" ", strip=True)
                 summary = (raw_summary[:115] + "...") if len(raw_summary) > 115 else raw_summary
@@ -63,20 +65,42 @@ for source_name, url in [
                 })
             if data["news"]:
                 break
-        else:
-            data["errors"].append(f"News ({source_name}): HTTP {nr.status_code}")
     except Exception as e:
         data["errors"].append(f"News ({source_name}): {e}")
 
-# 3. Zelenec Train Departures (IDnes Jizdni rady static HTML board)
+# 3. Zelenec Village News (parses date-prefixed news items from zelenec.cz/aktuality)
+try:
+    vr = requests.get("https://www.zelenec.cz/aktuality", headers=WEB_HEADERS, timeout=15)
+    soup = BeautifulSoup(vr.text, "html.parser")
+    seen = set()
+    # First check links inside main content area
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        full_text = " ".join(a.parent.get_text().split()) if a.parent else " ".join(a.get_text().split())
+        title = " ".join(a.get_text().split())
+        if re.search(r"\d{1,2}\.\s*\d{1,2}\.\s*\d{4}", full_text) and len(title) > 10:
+            date_match = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", full_text)
+            date_str = date_match.group(1) if date_match else "Obec Zeleneč"
+            clean_title = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
+            link = href if href.startswith("http") else "https://www.zelenec.cz" + href
+            if clean_title not in seen and "filter-" not in href:
+                seen.add(clean_title)
+                data["village"].append({"title": clean_title, "link": link, "date": date_str})
+                if len(data["village"]) >= 6:
+                    break
+except Exception as e:
+    data["errors"].append(f"Village: {e}")
+
+# 4. Zelenec Train Departures (CD.cz / PID station departures)
 try:
     tr = requests.get(
         "https://idnes.cz",
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0"},
+        params={"f": "Zeleneč", "submit": "true"},
+        headers=WEB_HEADERS,
         timeout=15
     )
     soup = BeautifulSoup(tr.text, "html.parser")
-    for row in soup.select("table tr"):
+    for row in soup.select("tr"):
         cols = [c.get_text(" ", strip=True) for c in row.find_all("td")]
         times = [c for c in cols if re.match(r"^\d{1,2}:\d{2}$", c)]
         if times and len(cols) >= 3:
@@ -96,27 +120,6 @@ try:
                 break
 except Exception as e:
     data["errors"].append(f"Trains: {e}")
-
-# 4. Zelenec Village News (matches /aktuality/aktuality/<id> links anywhere on page)
-try:
-    vr = requests.get("https://www.zelenec.cz/aktuality", headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
-    soup = BeautifulSoup(vr.text, "html.parser")
-    seen = set()
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if "/aktuality/aktuality/" in href:
-            text = " ".join(a.get_text().split())
-            date_match = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", text)
-            date_str = date_match.group(1) if date_match else "Obec Zeleneč"
-            clean_title = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", text).strip()
-            link = href if href.startswith("http") else "https://www.zelenec.cz" + href
-            if len(clean_title) > 5 and link not in seen:
-                seen.add(link)
-                data["village"].append({"title": clean_title, "link": link, "date": date_str})
-                if len(data["village"]) >= 6:
-                    break
-except Exception as e:
-    data["errors"].append(f"Village: {e}")
 
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
