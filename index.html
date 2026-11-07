@@ -148,22 +148,19 @@
   </div>
 
   <script>
-    const OPEN_METEO = ["https:/", "://open-meteo.com", "v1", "forecast"].join("/");
     const GOLEMIO_URL = ["https:/", "api.golemio.cz", "v2", "pid", "departureboards"].join("/");
 
-    // 1. Live Weather (Zeleneč & Prague)
     function getWeatherIcon(code) {
-      let num = 3; // Default: Partly sunny
-      if (code === 0) num = 1;                                              // Sunny
-      else if (code === 1 || code === 2) num = 3;                           // Partly sunny
-      else if (code === 3) num = 7;                                         // Cloudy
-      else if (code === 45 || code === 48) num = 11;                        // Fog
-      else if (code >= 51 && code <= 57) num = 12;                          // Showers / drizzle
-      else if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) num = 18; // Rain
-      else if ((code >= 71 && code <= 77) || code === 85 || code === 86) num = 22; // Snow
-      else if (code >= 95) num = 15;                                        // T-storms
-
-      const base = ["https:/", "www.accuweather.com", "assets", "images", "weather-icons", "v2a"].join("/");
+      let num = 3;
+      if (code === 0) num = 1;
+      else if (code === 1 || code === 2) num = 3;
+      else if (code === 3) num = 7;
+      else if (code === 45 || code === 48) num = 11;
+      else if (code >= 51 && code <= 57) num = 12;
+      else if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) num = 18;
+      else if ((code >= 71 && code <= 77) || code === 85 || code === 86) num = 22;
+      else if (code >= 95) num = 15;
+      const base = ["https:/", "://accuweather.com", "assets", "images", "weather-icons", "v2a"].join("/");
       return `<img src="${base}/${num}.svg" alt="" style="width:20px; height:20px; vertical-align:middle;">`;
     }
 
@@ -197,7 +194,6 @@
       document.getElementById("weather").innerHTML = `<div class="weather-box">Weather error: ${err.message}</div>`;
     });
 
-    // 2. Live Zeleneč Trains via Golemio (stored locally in Vivaldi)
     function setGolemioKey() {
       const k = prompt("Paste your Golemio API Key (saved only in Vivaldi):");
       if (k && k.trim()) {
@@ -217,59 +213,65 @@
       u.searchParams.set("minutesAfter", "120");
       u.searchParams.set("limit", "8");
 
-      fetch(u.toString(), {
-        headers: { "X-Access-Token": key }
-      })
-        .then(r => {
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          return r.json();
-        })
+      fetch(u.toString(), { headers: { "X-Access-Token": key } })
+        .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
         .then(d => {
-          const deps = d.departures || [];
-          document.getElementById("trains").innerHTML = deps.map(t => {
+          document.getElementById("trains").innerHTML = (d.departures || []).map(t => {
             const line = t.route?.short_name || "Train";
             const dest = t.trip?.headsign || "";
             const time = (t.departure_timestamp?.predicted || "").slice(11, 16);
             const delay = t.delay?.minutes || 0;
-            return `
-              <div class="train-row">
-                <div class="train-time">${time}</div>
-                <div class="train-info">
-                  <div class="train-dest">${dest}</div>
-                  <div class="train-num">Line ${line}</div>
-                </div>
-                <div class="${delay > 0 ? 'badge-delay' : 'badge-ok'}">${delay > 0 ? '+' + delay + ' min' : 'On time'}</div>
-              </div>`;
+            return `<div class="train-row"><div class="train-time">${time}</div><div class="train-info"><div class="train-dest">${dest}</div><div class="train-num">Line ${line}</div></div><div class="${delay > 0 ? 'badge-delay' : 'badge-ok'}">${delay > 0 ? '+' + delay + ' min' : 'On time'}</div></div>`;
           }).join("") || "<p style='color:var(--muted)'>No trains in next 2 hours.</p>";
         })
         .catch(err => {
-          document.getElementById("trains").innerHTML = `<p style="color:var(--muted)">Train feed error (${err.message}). Check API key or click Live Board ↗ above.</p>`;
+          document.getElementById("trains").innerHTML = `<p style="color:var(--muted)">Train feed error (${err}).</p>`;
         });
     }
     loadTrains();
 
-    // 3. Load Village & Czech News from GitHub Action data.json
+    async function translateCzToEn(text) {
+      if (!text) return "";
+      try {
+        const host = "translate." + "googleapis" + ".com";
+        const u = new URL("https://" + host + "/translate_a/single");
+        u.searchParams.set("client", "gtx");
+        u.searchParams.set("sl", "cs");
+        u.searchParams.set("tl", "en");
+        u.searchParams.set("dt", "t");
+        u.searchParams.set("q", text);
+        const r = await fetch(u.toString());
+        const d = await r.json();
+        return (d.at(0) || []).map(c => c.at(0) || "").join("").trim() || text;
+      } catch {
+        return text;
+      }
+    }
+
     const dataUrl = new URL("./data.json", window.location.href);
     dataUrl.searchParams.set("t", Date.now());
     fetch(dataUrl.toString())
       .then(r => r.json())
-      .then(d => {
-        document.getElementById("village").innerHTML = (d.village || []).map(v => `
-          <div class="news-item">
-            <div class="news-meta">${v.date || "Obec Zeleneč"}</div>
-            <a href="${v.link}" target="_blank">${v.title}</a>
-            ${v.summary ? `<div style="font-size:0.83rem; color:var(--text); opacity:0.85; margin-top:0.25rem; line-height:1.4;">${v.summary}</div>` : ""}
-            ${v.cz && v.cz !== v.title ? `<div style="font-size:0.76rem; color:var(--muted); margin-top:0.2rem;">${v.cz}</div>` : ""}
-          </div>
-        `).join("") || "<p style='color:var(--muted)'>No village news found.</p>";
-
-        
+      .then(async d => {
         document.getElementById("news").innerHTML = (d.news || []).map(n => `
           <div class="news-item">
             <div class="news-meta">${n.meta || "Czech News"}</div>
             <a href="${n.link}" target="_blank">${n.title}</a>
           </div>
         `).join("") || "<p style='color:var(--muted)'>No Czech news found.</p>";
+
+        const villageItems = await Promise.all((d.village || []).map(async v => {
+          const enTitle = await translateCzToEn(v.title);
+          const enSummary = v.summary ? await translateCzToEn(v.summary) : "";
+          return `
+            <div class="news-item">
+              <div class="news-meta">${v.date || "Obec Zeleneč"}</div>
+              <a href="${v.link}" target="_blank">${enTitle}</a>
+              ${enSummary ? `<div style="font-size:0.83rem; color:var(--text); opacity:0.85; margin-top:0.25rem; line-height:1.4;">${enSummary}</div>` : ""}
+              ${enTitle !== v.title ? `<div style="font-size:0.76rem; color:var(--muted); margin-top:0.2rem;">${v.title}</div>` : ""}
+            </div>`;
+        }));
+        document.getElementById("village").innerHTML = villageItems.join("") || "<p style='color:var(--muted)'>No village news found.</p>";
       });
   </script>
 </body>
