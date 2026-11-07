@@ -145,7 +145,10 @@
   </div>
 
   <script>
-    // 1. Live Weather using URL() + searchParams (immune to query-string stripping)
+    const OPEN_METEO = ["https:/", "://open-meteo.com", "v1", "forecast"].join("/");
+    const GOLEMIO_URL = ["https:/", "api.golemio.cz", "v2", "pid", "departureboards"].join("/");
+
+    // 1. Live Weather (Zeleneč & Prague)
     const weatherIcons = {
       0: "☀️ Clear", 1: "🌤️ Mostly clear", 2: "⛅ Partly cloudy", 3: "☁️ Overcast",
       45: "🌫️ Fog", 48: "🌫️ Rime fog", 51: "🌦️ Drizzle", 61: "🌧️ Rain",
@@ -153,7 +156,7 @@
     };
 
     async function getWeather(city, lat, lon) {
-      const u = new URL("https://open-meteo.com");
+      const u = new URL(OPEN_METEO);
       u.searchParams.set("latitude", lat);
       u.searchParams.set("longitude", lon);
       u.searchParams.set("current", "temperature_2m,apparent_temperature,weather_code,wind_speed_10m");
@@ -178,7 +181,7 @@
       document.getElementById("weather").innerHTML = `<div class="weather-box">Weather error: ${err.message}</div>`;
     });
 
-    // 2. Live Zeleneč Trains via Golemio using URL() + searchParams
+    // 2. Live Zeleneč Trains via Golemio (stored locally in Vivaldi)
     function setGolemioKey() {
       const k = prompt("Paste your Golemio API Key (saved only in Vivaldi):");
       if (k && k.trim()) {
@@ -193,7 +196,7 @@
         document.getElementById("trains").innerHTML = `<p style="color:var(--muted)">Click <strong>API Key</strong> above to connect live Golemio train times.</p>`;
         return;
       }
-      const u = new URL("https://golemio.cz");
+      const u = new URL(GOLEMIO_URL);
       u.searchParams.set("names", "Zeleneč");
       u.searchParams.set("minutesAfter", "120");
       u.searchParams.set("limit", "8");
