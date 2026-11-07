@@ -8,14 +8,14 @@ BROWSER_HEADERS = {
 
 # 1. Fetch Zelenec Village News
 try:
-    vr = requests.get("https://www.zelenec.cz/aktuality", headers=BROWSER_HEADERS, timeout=15)
+    vr = requests.get("https://zelenec.cz", headers=BROWSER_HEADERS, timeout=15)
     print("Zelenec status:", vr.status_code)
     if vr.status_code == 200:
         soup = BeautifulSoup(vr.text, "html.parser")
         seen = set()
         for a in soup.select("a[href*='/aktuality/aktuality/']"):
             title = " ".join(a.get_text().split())
-            link = a["href"] if a["href"].startswith("http") else "https://www.zelenec.cz" + a["href"]
+            link = a["href"] if a["href"].startswith("http") else "https://zelenec.cz" + a["href"]
             if len(title) > 8 and link not in seen:
                 seen.add(link)
                 data["village"].append({"title": title, "link": link})
@@ -26,7 +26,7 @@ except Exception as e:
 
 # 2. Fetch English Czech News (Radio Prague International)
 try:
-    nr = requests.get("https://english.radio.cz/rcz-rss/en", headers=BROWSER_HEADERS, timeout=15)
+    nr = requests.get("https://radio.cz", headers=BROWSER_HEADERS, timeout=15)
     print("Radio Prague status:", nr.status_code)
     if nr.status_code == 200:
         feed = feedparser.parse(nr.text)
