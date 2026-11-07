@@ -1,11 +1,25 @@
 {
   "village": [
     {
-      "title": "Život v Zelenči",
-      "cz": "Život v Zelenči",
-      "summary": "",
-      "link": "https://www.zelenec.cz/zivot-v-zelenci/",
-      "date": "Obec Zeleneč"
+      "title": "Plavání pro občany Zelenče všech věkových kategorií",
+      "cz": "Plavání pro občany Zelenče všech věkových kategorií",
+      "summary": "Využijte možnost plavání v bazénu v Brandýse.",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1000-plavani-pro-obcany-zelence-vsech-vekovych-kategorii/",
+      "date": "8. 11. 2026"
+    },
+    {
+      "title": "Lampionový průvod",
+      "cz": "Lampionový průvod",
+      "summary": "Lampionový průvod v Zelenči",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/1004-lampionovy-pruvod/",
+      "date": "9. 11. 2026"
+    },
+    {
+      "title": "Trhy v Zelenči každý pátek!",
+      "cz": "Trhy v Zelenči každý pátek!",
+      "summary": "Zveme vás na podzimní Trhy v Zelenči .",
+      "link": "https://zelenec.cz/kalendar-akci/kalendar-akci/997-trhy-v-zelenci-kazdy-patek/",
+      "date": "13. 11. 2026"
     }
   ],
   "news": [
@@ -50,5 +64,5 @@
       "meta": "Radio Prague • Fri, 06 Nov 2026"
     }
   ],
-  "updated": "2026-11-07 22:06 UTC"
+  "updated": "2026-11-07 22:14 UTC"
 }
