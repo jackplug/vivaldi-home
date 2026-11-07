@@ -6,27 +6,34 @@ data = {"trains": [], "village": [], "news": [], "debug": ""}
 # 1. Fetch Zelenec Trains via Golemio
 api_key = os.environ.get("GOLEMIO_KEY", "").strip()
 if not api_key:
-    print("WARNING: GOLEMIO_KEY secret is empty!")
     data["debug"] = "Missing GOLEMIO_API_KEY secret"
 else:
     headers = {
         "X-Access-Token": api_key,
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; VivaldiHomeDashboard/1.0)"
     }
     url = "https://golemio.cz"
-    r = requests.get(url, headers=headers, timeout=15)
-    print(f"Golemio status: {r.status_code}, body length: {len(r.text)}")
-    
-    if r.status_code == 200 and r.text.strip():
-        for dep in r.json().get("departures", []):
-            data["trains"].append({
-                "line": dep.get("route", {}).get("short_name", "?"),
-                "dest": dep.get("trip", {}).get("headsign", ""),
-                "time": dep.get("departure_timestamp", {}).get("predicted", "")[11:16],
-                "delay": dep.get("delay", {}).get("minutes", 0)
-            })
-    else:
-        data["debug"] = f"Golemio returned HTTP {r.status_code}"
+    try:
+        r = requests.get(url, headers=headers, timeout=15)
+        content_type = r.headers.get("Content-Type", "")
+        print(f"Golemio status: {r.status_code}, type: {content_type}, length: {len(r.text)}")
+        
+        if r.status_code == 200 and "application/json" in content_type:
+            for dep in r.json().get("departures", []):
+                data["trains"].append({
+                    "line": dep.get("route", {}).get("short_name", "?"),
+                    "dest": dep.get("trip", {}).get("headsign", ""),
+                    "time": dep.get("departure_timestamp", {}).get("predicted", "")[11:16],
+                    "delay": dep.get("delay", {}).get("minutes", 0)
+                })
+        else:
+            snippet = r.text[:150].replace("\n", " ")
+            print("Golemio non-JSON response preview:", snippet)
+            data["debug"] = f"Golemio returned {r.status_code} ({content_type})"
+    except Exception as e:
+        print("Golemio error:", e)
+        data["debug"] = str(e)
 
 # 2. Fetch Zelenec Village News
 try:
