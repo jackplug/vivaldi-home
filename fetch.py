@@ -15,15 +15,13 @@ try:
         soup = BeautifulSoup(tr.text, "html.parser")
         for row in soup.select("table tr"):
             cols = [c.get_text(" ", strip=True) for c in row.find_all("td")]
-            # Find first column matching HH:MM
             times = [c for c in cols if re.match(r"^\d{1,2}:\d{2}$", c)]
-            if times and len(cols) >= 5:
-                sched = times[0]
-                actual = times[1] if len(times) > 1 else ""
-                # Filter out empty/time cells to find train number, line, and destination
-                text_cols = [c for c in cols if c and not re.match(r"^\d{1,2}:\d{2}$", c)]
-                train_id = text_cols[0] if len(text_cols) > 0 else ""
-                dest = text_cols[-1] if len(text_cols) > 1 else ""
+            text_cols = [c for c in cols if c and not re.match(r"^\d{1,2}:\d{2}$", c)]
+            if len(times) >= 1 and len(text_cols) >= 2:
+                sched = times.pop(0)
+                actual = times.pop(0) if times else ""
+                train_id = text_cols.pop(0)
+                dest = text_cols.pop()
                 delay_min = 0
                 if actual and actual != sched:
                     sh, sm = map(int, sched.split(":"))
@@ -86,20 +84,20 @@ for source_name, url in [("Radio Prague", "https://radio.cz"), ("Expats.cz", "ht
     except Exception as e:
         print(f"News fetch error ({url}):", e)
 
-# 4. Fetch Weather Backup (Zelenec & Prague) — Fixed [0] indexing on daily arrays
+# 4. Fetch Weather Backup (Zelenec & Prague)
 for key, lat, lon in [("zelenec", 50.130, 14.666), ("prague", 50.075, 14.437)]:
     try:
         wr = requests.get(
-            f"https://open-meteo.com{lat}&longitude={lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FPrague&forecast_days=1",
+            f"https://open-meteo.com{lat}&longitude={lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=Europe%2FPrague",
             timeout=10
         )
         if wr.status_code == 200:
-            wj = wr.json()
+            cur = wr.json().get("current", {})
             data["weather"][key] = {
-                "temp": round(wj["current"]["temperature_2m"]),
-                "code": wj["current"]["weather_code"],
-                "max": round(wj["daily"]["temperature_2m_max"][0]),
-                "min": round(wj["daily"]["temperature_2m_min"][0])
+                "temp": round(cur.get("temperature_2m", 0)),
+                "feels": round(cur.get("apparent_temperature", 0)),
+                "code": cur.get("weather_code", 0),
+                "wind": round(cur.get("wind_speed_10m", 0))
             }
     except Exception as e:
         print(f"Weather fetch error ({key}):", e)
