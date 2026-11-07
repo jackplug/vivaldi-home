@@ -1,21 +1,19 @@
 name: Update Dashboard Data
 on:
   schedule:
-    - cron: '*/15 * * * *' # Runs every 15 minutes
-  workflow_dispatch:        # Lets you click a button to run it manually
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: pip install requests beautifulsoup4 feedparser
-      - env:
-          GOLEMIO_KEY: ${{ secrets.GOLEMIO_API_KEY }}
-        run: python fetch.py
+      - run: python fetch.py
       - run: |
           git config user.name "Dashboard Bot"
           git config user.email "bot@://github.com"
