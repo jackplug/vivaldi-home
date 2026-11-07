@@ -13,7 +13,7 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
       gap: 1.5rem;
     }
     .card {
@@ -28,9 +28,6 @@
       color: #7aa2f7;
       border-bottom: 1px solid #333;
       padding-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     ul {
       list-style: none;
@@ -53,14 +50,6 @@
     a:hover {
       text-decoration: underline;
     }
-    .delay {
-      color: #f7768e;
-      font-weight: bold;
-    }
-    .ontime {
-      color: #9ece6a;
-      font-size: 0.85rem;
-    }
     .weather-row {
       display: flex;
       justify-content: space-between;
@@ -70,30 +59,21 @@
     .weather-row:last-child {
       border-bottom: none;
     }
-    .btn-small {
-      background: #2a2a2a;
-      color: #aaa;
-      border: 1px solid #444;
-      border-radius: 4px;
-      padding: 2px 8px;
-      font-size: 0.75rem;
-      cursor: pointer;
-    }
-    .btn-small:hover {
-      color: #fff;
-      border-color: #7aa2f7;
+    iframe {
+      width: 100%;
+      height: 360px;
+      border: none;
+      border-radius: 6px;
+      background: #fff;
     }
   </style>
 </head>
 <body>
   <div class="grid">
-    <!-- Column 1: Live Trains -->
+    <!-- Column 1: Live Správa železnic Departure Board for Zeleneč -->
     <div class="card">
-      <h2>
-        <span>🚆 Zeleneč Departures</span>
-        <button class="btn-small" onclick="resetKey()">Key</button>
-      </h2>
-      <ul id="trains"><li>Loading live trains...</li></ul>
+      <h2>🚆 Zeleneč Departures (Live)</h2>
+      <iframe src="https://spravazeleznic.cz" title="Zeleneč Train Departures"></iframe>
     </div>
 
     <!-- Column 2: Weather & Local Village -->
@@ -113,51 +93,7 @@
   </div>
 
   <script>
-    function resetKey() {
-      localStorage.removeItem("golemio_key");
-      location.reload();
-    }
-
-    // 1. Live Trains from Golemio (using key stored ONLY in your browser)
-    let apiKey = localStorage.getItem("golemio_key");
-    if (!apiKey) {
-      apiKey = prompt("Enter your Golemio API Key (stored only locally in Vivaldi):");
-      if (apiKey) localStorage.setItem("golemio_key", apiKey.trim());
-    }
-
-    if (apiKey) {
-      fetch("https://golemio.cz", {
-        headers: { "X-Access-Token": apiKey }
-      })
-        .then(r => {
-          if (r.status === 401 || r.status === 403) {
-            localStorage.removeItem("golemio_key");
-            throw new Error("Invalid API key — click 'Key' to re-enter");
-          }
-          if (!r.ok) throw new Error("Golemio HTTP " + r.status);
-          return r.json();
-        })
-        .then(d => {
-          const deps = d.departures || [];
-          document.getElementById("trains").innerHTML = deps.map(t => {
-            const line = t.route?.short_name || "?";
-            const dest = t.trip?.headsign || "";
-            const time = (t.departure_timestamp?.predicted || "").slice(11, 16);
-            const delay = t.delay?.minutes || 0;
-            const badge = delay > 0
-              ? `<span class="delay">(+${delay}m)</span>`
-              : `<span class="ontime">(on time)</span>`;
-            return `<li><strong>${line}</strong> → ${dest} at <strong>${time}</strong> ${badge}</li>`;
-          }).join("") || "<li>No upcoming trains in next 2 hours</li>";
-        })
-        .catch(err => {
-          document.getElementById("trains").innerHTML = `<li>${err.message}</li>`;
-        });
-    } else {
-      document.getElementById("trains").innerHTML = "<li>No API key set — click 'Key' above to enter</li>";
-    }
-
-    // 2. Live Weather (Zeleneč & Prague)
+    // 1. Live Weather (Zeleneč & Prague) — Fixed array indexing w[0] and w[1]
     fetch("https://open-meteo.com")
       .then(r => r.json())
       .then(w => {
@@ -173,11 +109,11 @@
             <span><strong>${prg.current.temperature_2m}°C</strong> (H: ${prg.daily.temperature_2m_max[0]}° / L: ${prg.daily.temperature_2m_min[0]}°)</span>
           </div>`;
       })
-      .catch(() => {
-        document.getElementById("weather").innerHTML = "<p>Could not load weather</p>";
+      .catch(err => {
+        document.getElementById("weather").innerHTML = "<p>Weather error: " + err.message + "</p>";
       });
 
-    // 3. Village & Czech News from GitHub Action data.json
+    // 2. Village & Czech News from GitHub Action data.json
     fetch("./data.json?t=" + Date.now())
       .then(r => r.json())
       .then(d => {
