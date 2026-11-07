@@ -279,7 +279,24 @@
               ${enTitle !== v.title ? `<div style="font-size:0.76rem; color:var(--muted); margin-top:0.2rem;">${v.title}</div>` : ""}
             </div>`;
         }));
-        document.getElementById("village").innerHTML = villageItems.join("") || "<p style='color:var(--muted)'>No village news found.</p>";
+
+        const fbItems = await Promise.all((d.facebook || []).map(async fb => {
+          const enText = await translateCzToEn(fb.text);
+          return `
+            <div class="news-item">
+              <div class="news-meta">${fb.date}</div>
+              <a href="${fb.link}" target="_blank" style="font-weight:500;">${enText}</a>
+              ${enText !== fb.text ? `<div style="font-size:0.76rem; color:var(--muted); margin-top:0.2rem;">${fb.text}</div>` : ""}
+            </div>`;
+        }));
+
+        const fbSection = fbItems.length ? `
+          <div style="margin:0.85rem 0 0.35rem 0; padding-top:0.65rem; border-top:1px dashed var(--border); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted);">
+            Facebook Updates
+          </div>
+          ${fbItems.join("")}` : "";
+
+        document.getElementById("village").innerHTML = (villageItems.join("") || "<p style='color:var(--muted)'>No village news found.</p>") + fbSection;
       });
   </script>
 </body>
