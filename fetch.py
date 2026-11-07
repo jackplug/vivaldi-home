@@ -21,6 +21,24 @@ HEADERS = {
     "Accept-Language": "cs-CZ,cs;q=0.9,en;q=0.8"
 }
 
+def translate_cs_to_en(text):
+    try:
+        host = "translate." + "googleapis" + ".com"
+        url = "https://" + host + "/translate_a/single"
+        r = requests.get(
+            url,
+            params={"client": "gtx", "sl": "cs", "tl": "en", "dt": "t", "q": text},
+            timeout=10
+        )
+        if r.status_code == 200:
+            chunks = r.json()[0]
+            translated = "".join(part[0] for part in chunks if part and part[0])
+            if translated.strip():
+                return translated.strip()
+    except Exception as e:
+        print("Translate error:", e)
+    return text
+
 # 1. Fetch English Czech News (Radio Prague via feedparser + Google News EN fallback)
 rp_url = "https://" + "english.radio.cz" + "/rcz-rss/en"
 gn_url = "https://" + "://google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
@@ -31,10 +49,9 @@ for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
         new_articles = []
         for entry in feed.entries[:8]:
             raw_title = entry.title.strip()
-            # Clean Google News "Title - Source" suffix if present
             if source_name == "Czech News" and " - " in raw_title:
                 parts = raw_title.rsplit(" - ", 1)
-                title, pub = parts, parts
+                title, pub = parts[0], parts[1]
             else:
                 title, pub = raw_title, source_name
             published = getattr(entry, "published", "")[:16]
@@ -45,12 +62,11 @@ for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
             })
         if new_articles:
             data["news"] = new_articles
-            print(f"Loaded {len(new_articles)} news items from {source_name}")
             break
     except Exception as e:
         print(f"News error ({source_name}):", e)
 
-# 2. Fetch Obec Zelenec News with exact dates & title deduplication
+# 2. Fetch Obec Zelenec News + Translate to English
 try:
     vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
     soup = BeautifulSoup(vr.text, "html.parser")
@@ -76,7 +92,6 @@ try:
             and "filter-" not in href
             and "page=" not in href
         ):
-            # Look inside parent card/container for a Czech date (e.g. 24. 10. 2026)
             date_str = "Obec Zeleneč"
             parent = a.find_parent(["article", "li", "div"])
             for _ in range(3):
@@ -88,14 +103,15 @@ try:
                     break
                 parent = parent.parent
 
-            # Strip date if it was inside the link text itself
-            clean_title = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
+            clean_cz = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
             link = "https://zelenec.cz" + href
 
-            if clean_title not in seen_titles and len(clean_title) > 10:
-                seen_titles.add(clean_title)
+            if clean_cz not in seen_titles and len(clean_cz) > 10:
+                seen_titles.add(clean_cz)
+                en_title = translate_cs_to_en(clean_cz)
                 new_village.append({
-                    "title": clean_title,
+                    "title": en_title,
+                    "cz": clean_cz,
                     "link": link,
                     "date": date_str
                 })
