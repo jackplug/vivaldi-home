@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zeleneč Home</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #121212; color: #eee; margin: 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .card { background: #1e1e1e; padding: 1.25rem; border-radius: 10px; }
+    h2 { margin-top: 0; font-size: 1.1rem; color: #7aa2f7; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { padding: 0.5rem 0; border-bottom: 1px solid #2a2a2a; font-size: 0.95rem; }
+    a { color: #c0caf5; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .delay { color: #f7768e; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <div class="card"><h2>🚆 Zeleneč Departures</h2><ul id="trains">Loading...</ul></div>
+    <div class="card"><h2>🌤️ Weather</h2><div id="weather">Loading...</div><h2 style="margin-top:1.5rem">🏘️ Obec Zeleneč</h2><ul id="village"></ul></div>
+    <div class="card"><h2>🇨🇿 Czech News (EN)</h2><ul id="news"></ul></div>
+  </div>
+  <script>
+    // Load Weather Live
+    fetch("https://open-meteo.com")
+      .then(r => r.json()).then(w => {
+        document.getElementById("weather").innerHTML = `
+          <p><strong>Zeleneč:</strong> ${w[0].current.temperature_2m}°C</p>
+          <p><strong>Prague:</strong> ${w[1].current.temperature_2m}°C</p>`;
+      });
+
+    // Load Data from GitHub Bot
+    fetch("./data.json?t=" + Date.now()).then(r => r.json()).then(d => {
+      document.getElementById("trains").innerHTML = d.trains.map(t =>
+        `<li><strong>${t.line}</strong> → ${t.dest} at <strong>${t.time}</strong> ${t.delay > 0 ? `<span class="delay">(+${t.delay}m)</span>` : ''}</li>`
+      ).join("") || "<li>No upcoming trains</li>";
+
+      document.getElementById("village").innerHTML = d.village.map(v =>
+        `<li><a href="${v.link}" target="_blank">${v.title}</a></li>`
+      ).join("");
+
+      document.getElementById("news").innerHTML = d.news.map(n =>
+        `<li><a href="${n.link}" target="_blank">${n.title}</a></li>`
+      ).join("");
+    });
+  </script>
+</body>
+</html>
