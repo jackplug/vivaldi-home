@@ -8,5 +8,5 @@
     "Weather (prague): HTTPSConnectionPool(host='met.no50.075&lon=14.437', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='met.no50.075&lon=14.437', port=443): Failed to resolve 'met.no50.075&lon=14.437' ([Errno -2] Name or service not known)\"))",
     "News (Radio Prague): HTTP 403"
   ],
-  "updated": "2026-11-07 20:45 UTC"
+  "updated": "2026-11-07 20:48 UTC"
 }
