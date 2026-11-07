@@ -127,37 +127,33 @@
   <script>
     const weatherIcons = {
       0: "☀️ Clear", 1: "🌤️ Mostly clear", 2: "⛅ Partly cloudy", 3: "☁️ Overcast",
-      45: "🌫️ Fog", 48: "🌫️ Rime fog", 51: "🌦️ Light drizzle", 61: "🌧️ Rain",
-      71: "❄️ Snow", 80: "🌦️ Showers", 95: "⛈️ Thunderstorm"
+      45: "🌫️ Fog", 48: "🌫️ Rime fog", 51: "🌦️ Drizzle", 61: "🌧️ Rain",
+      71: "❄️ Snow", 80: "🌦️ Showers", 95: "⛈️ Storm"
     };
 
-    async function loadWeatherCity(name, lat, lon) {
-      const url = `https://open-meteo.com{lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FPrague&forecast_days=1`;
-      const res = await fetch(url);
-      const d = await res.json();
-      const cond = weatherIcons[d.current.weather_code] || "🌡️";
-      return `
+    function renderWeather(zel, prg) {
+      if (!zel || !prg) return;
+      document.getElementById("weather").innerHTML = `
         <div class="weather-box">
-          <div class="weather-city">${name}</div>
-          <div class="weather-temp">${Math.round(d.current.temperature_2m)}°C</div>
-          <div class="weather-sub">${cond} • H:${Math.round(d.daily.temperature_2m_max)}° L:${Math.round(d.daily.temperature_2m_min)}°</div>
+          <div class="weather-city">Zeleneč</div>
+          <div class="weather-temp">${zel.temp}°C</div>
+          <div class="weather-sub">${weatherIcons[zel.code] || "🌡️"} • H:${zel.max}° L:${zel.min}°</div>
+        </div>
+        <div class="weather-box">
+          <div class="weather-city">Prague</div>
+          <div class="weather-temp">${prg.temp}°C</div>
+          <div class="weather-sub">${weatherIcons[prg.code] || "🌡️"} • H:${prg.max}° L:${prg.min}°</div>
         </div>`;
     }
 
-    Promise.all([
-      loadWeatherCity("Zeleneč", 50.130, 14.666),
-      loadWeatherCity("Prague", 50.075, 14.437)
-    ]).then(([zelHtml, prgHtml]) => {
-      document.getElementById("weather").innerHTML = zelHtml + prgHtml;
-    }).catch(() => {
-      document.getElementById("weather").innerHTML = "<div class='weather-box'>Weather unavailable</div>";
-    });
-
-    // Load Trains, Village News & Czech News from data.json
+    // Load data.json (Trains, Village News, Czech News + Backup Weather)
     fetch("./data.json?t=" + Date.now())
       .then(r => r.json())
       .then(d => {
-        // Trains
+        if (d.weather && d.weather.zelenec && d.weather.prague) {
+          renderWeather(d.weather.zelenec, d.weather.prague);
+        }
+
         document.getElementById("trains").innerHTML = (d.trains || []).map(t => `
           <div class="train-row">
             <div class="train-time">${t.time}</div>
@@ -165,11 +161,10 @@
               <div class="train-dest">${t.dest}</div>
               <div class="train-num">${t.train}</div>
             </div>
-            <div class="${t.delay ? 'badge-delay' : 'badge-ok'}">${t.delay ? '+' + t.delay + ' min' : 'On time'}</div>
+            <div class="${t.delay > 0 ? 'badge-delay' : 'badge-ok'}">${t.delay > 0 ? '+' + t.delay + ' min' : 'On time'}</div>
           </div>
         `).join("") || "<p style='color:var(--muted)'>No departures listed right now.</p>";
 
-        // Village
         document.getElementById("village").innerHTML = (d.village || []).map(v => `
           <div class="news-item">
             <div class="news-meta">${v.date || "Obec Zeleneč"}</div>
@@ -177,7 +172,6 @@
           </div>
         `).join("") || "<p style='color:var(--muted)'>No village news found.</p>";
 
-        // Czech News
         document.getElementById("news").innerHTML = (d.news || []).map(n => `
           <div class="news-item">
             <div class="news-meta">${n.meta || "Czech News"}</div>
@@ -186,6 +180,18 @@
           </div>
         `).join("") || "<p style='color:var(--muted)'>No Czech news found.</p>";
       });
-  </script>
+
+    // Also refresh Weather live in browser
+    Promise.all([
+      fetch("https://open-meteo.com").then(r => r.json()),
+      fetch("https://open-meteo.com").then(r => r.json())
+    ]).then(([z, p]) => {
+      renderWeather(
+        { temp: Math.round(z.current.temperature_2m), code: z.current.weather_code, max: Math.round(z.daily.temperature_2m_max), min: Math.round(z.daily.temperature_2m_min) },
+        { temp: Math.round(p.current.temperature_2m), code: p.current.weather_code, max: Math.round(p.daily.temperature_2m_max), min: Math.round(p.daily.temperature_2m_min) }
+      );
+    }).catch(() => {});
+</script>
+
 </body>
 </html>
