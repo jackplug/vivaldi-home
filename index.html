@@ -45,7 +45,6 @@
       border-bottom: 1px solid var(--border);
       padding-bottom: 0.65rem;
     }
-    /* Weather Styling */
     .weather-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -62,7 +61,6 @@
     .weather-temp { font-size: 1.65rem; font-weight: 700; }
     .weather-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
 
-    /* Train Rows */
     .train-row {
       display: flex;
       justify-content: space-between;
@@ -78,7 +76,6 @@
     .badge-ok { color: var(--green); font-size: 0.8rem; font-weight: 600; }
     .badge-delay { color: var(--red); font-size: 0.8rem; font-weight: 700; }
 
-    /* News & Village Items */
     .news-item {
       padding: 0.75rem 0;
       border-bottom: 1px solid var(--border);
@@ -99,13 +96,11 @@
 </head>
 <body>
   <div class="grid">
-    <!-- Column 1: Trains -->
     <div class="card">
       <h2>🚆 Zeleneč Departures</h2>
       <div id="trains">Loading departures...</div>
     </div>
 
-    <!-- Column 2: Weather & Obec Zeleneč -->
     <div class="card">
       <h2>🌤️ Weather Forecast</h2>
       <div class="weather-grid" id="weather">
@@ -117,7 +112,6 @@
       <div id="village">Loading village news...</div>
     </div>
 
-    <!-- Column 3: Czech News -->
     <div class="card">
       <h2>🇨🇿 Czech News (EN)</h2>
       <div id="news">Loading Czech news...</div>
@@ -137,16 +131,15 @@
         <div class="weather-box">
           <div class="weather-city">Zeleneč</div>
           <div class="weather-temp">${zel.temp}°C</div>
-          <div class="weather-sub">${weatherIcons[zel.code] || "🌡️"} • H:${zel.max}° L:${zel.min}°</div>
+          <div class="weather-sub">${weatherIcons[zel.code] || "🌡️"} • Feels ${zel.feels}° • ${zel.wind} km/h</div>
         </div>
         <div class="weather-box">
           <div class="weather-city">Prague</div>
           <div class="weather-temp">${prg.temp}°C</div>
-          <div class="weather-sub">${weatherIcons[prg.code] || "🌡️"} • H:${prg.max}° L:${prg.min}°</div>
+          <div class="weather-sub">${weatherIcons[prg.code] || "🌡️"} • Feels ${prg.feels}° • ${prg.wind} km/h</div>
         </div>`;
     }
 
-    // Load data.json (Trains, Village News, Czech News + Backup Weather)
     fetch("./data.json?t=" + Date.now())
       .then(r => r.json())
       .then(d => {
@@ -181,17 +174,15 @@
         `).join("") || "<p style='color:var(--muted)'>No Czech news found.</p>";
       });
 
-    // Also refresh Weather live in browser
     Promise.all([
       fetch("https://open-meteo.com").then(r => r.json()),
       fetch("https://open-meteo.com").then(r => r.json())
     ]).then(([z, p]) => {
       renderWeather(
-        { temp: Math.round(z.current.temperature_2m), code: z.current.weather_code, max: Math.round(z.daily.temperature_2m_max[0]), min: Math.round(z.daily.temperature_2m_min[0]) },
-        { temp: Math.round(p.current.temperature_2m), code: p.current.weather_code, max: Math.round(p.daily.temperature_2m_max[0]), min: Math.round(p.daily.temperature_2m_min[0]) }
+        { temp: Math.round(z.current.temperature_2m), feels: Math.round(z.current.apparent_temperature), code: z.current.weather_code, wind: Math.round(z.current.wind_speed_10m) },
+        { temp: Math.round(p.current.temperature_2m), feels: Math.round(p.current.apparent_temperature), code: p.current.weather_code, wind: Math.round(p.current.wind_speed_10m) }
       );
     }).catch(() => {});
-</script>
-
+  </script>
 </body>
 </html>
