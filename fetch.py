@@ -21,49 +21,68 @@ HEADERS = {
     "Accept-Language": "cs-CZ,cs;q=0.9,en;q=0.8"
 }
 
-# 1. Fetch English Czech News (Radio Prague International)
-try:
-    feed = feedparser.parse("https://radio.cz")
-    new_articles = []
-    for entry in feed.entries[:8]:
-        published = getattr(entry, "published", "")[:16]
-        new_articles.append({
-            "title": entry.title.strip(),
-            "link": entry.link.strip(),
-            "meta": f"Radio Prague • {published}" if published else "Radio Prague"
-        })
-    if new_articles:
-        data["news"] = new_articles
-except Exception as e:
-    print("News error:", e)
-
-# 2. Fetch Obec Zelenec News (check /aktuality and /uredni-deska)
-new_village = []
-seen = set()
-for page_url in ["https://zelenec.cz", "https://zelenec.cz"]:
+# 1. Fetch English Czech News (tries Radio Prague, Expats.cz, and Prague Morning)
+rss_sources = [
+    ("Radio Prague", "https://radio.cz"),
+    ("Expats.cz", "https://expats.cz"),
+    ("Prague Morning", "https://praguemorning.cz")
+]
+for source_name, url in rss_sources:
     try:
-        vr = requests.get(page_url, headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(vr.text, "html.parser")
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            title = " ".join(a.get_text().split())
-            # Match news or official board links with real titles
-            if ("/aktuality/" in href or "/uredni-deska/" in href) and len(href) > 15 and "page=" not in href and "filter-" not in href:
-                link = href if href.startswith("http") else "https://zelenec.cz" + href
-                if len(title) > 10 and link not in seen:
-                    seen.add(link)
-                    new_village.append({
-                        "title": title,
-                        "link": link,
-                        "date": "Obec Zeleneč"
-                    })
-                    if len(new_village) >= 6:
-                        break
-        if new_village:
-            data["village"] = new_village
-            break
+        nr = requests.get(url, headers=HEADERS, timeout=15)
+        if nr.status_code == 200 and len(nr.content) > 200:
+            feed = feedparser.parse(nr.content)
+            new_articles = []
+            for entry in feed.entries[:8]:
+                published = getattr(entry, "published", "")[:16]
+                new_articles.append({
+                    "title": entry.title.strip(),
+                    "link": entry.link.strip(),
+                    "meta": f"{source_name} • {published}" if published else source_name
+                })
+            if new_articles:
+                data["news"] = new_articles
+                print(f"Loaded {len(new_articles)} articles from {source_name}")
+                break
     except Exception as e:
-        print("Village error:", e)
+        print(f"News error ({source_name}):", e)
+
+# 2. Fetch Obec Zelenec News (scans main content area & headings on zelenec.cz)
+try:
+    vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
+    soup = BeautifulSoup(vr.text, "html.parser")
+    new_village = []
+    seen = set()
+
+    # Check links inside <main>, <article>, or headings first (avoids top nav menu)
+    container = soup.find("main") or soup
+    skip_words = {"přeskočit", "zastupitelstvo", "výbory", "veřejné zakázky", "hospodaření", "vyhlášky", "povinně", "mstětice", "kontakty", "úřední deska", "aktuality", "kalendář", "fotogalerie"}
+    for a in container.find_all("a", href=True):
+        href = a["href"]
+        title = " ".join(a.get_text().split())
+        low = title.lower()
+        if (
+            href.startswith("/")
+            and len(href) > 12
+            and len(title) > 14
+            and not any(w in low for w in skip_words)
+            and "filter-" not in href
+            and "page=" not in href
+        ):
+            link = "https://zelenec.cz" + href
+            if link not in seen:
+                seen.add(link)
+                new_village.append({
+                    "title": title,
+                    "link": link,
+                    "date": "Obec Zeleneč"
+                })
+                if len(new_village) >= 6:
+                    break
+    if new_village:
+        data["village"] = new_village
+except Exception as e:
+    print("Village error:", e)
 
 with open("data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, indent=2)
