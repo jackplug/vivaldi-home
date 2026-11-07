@@ -21,42 +21,49 @@ HEADERS = {
     "Accept-Language": "cs-CZ,cs;q=0.9,en;q=0.8"
 }
 
-# 1. Fetch English Czech News (tries Radio Prague, Expats.cz, and Prague Morning)
-rss_sources = [
-    ("Radio Prague", "https://radio.cz"),
-    ("Expats.cz", "https://expats.cz"),
-    ("Prague Morning", "https://praguemorning.cz")
-]
-for source_name, url in rss_sources:
+# 1. Fetch English Czech News (Radio Prague via feedparser + Google News EN fallback)
+rp_url = "https://" + "english.radio.cz" + "/rcz-rss/en"
+gn_url = "https://" + "://google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
+
+for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
     try:
-        nr = requests.get(url, headers=HEADERS, timeout=15)
-        if nr.status_code == 200 and len(nr.content) > 200:
-            feed = feedparser.parse(nr.content)
-            new_articles = []
-            for entry in feed.entries[:8]:
-                published = getattr(entry, "published", "")[:16]
-                new_articles.append({
-                    "title": entry.title.strip(),
-                    "link": entry.link.strip(),
-                    "meta": f"{source_name} • {published}" if published else source_name
-                })
-            if new_articles:
-                data["news"] = new_articles
-                print(f"Loaded {len(new_articles)} articles from {source_name}")
-                break
+        feed = feedparser.parse(url)
+        new_articles = []
+        for entry in feed.entries[:8]:
+            raw_title = entry.title.strip()
+            # Clean Google News "Title - Source" suffix if present
+            if source_name == "Czech News" and " - " in raw_title:
+                parts = raw_title.rsplit(" - ", 1)
+                title, pub = parts, parts
+            else:
+                title, pub = raw_title, source_name
+            published = getattr(entry, "published", "")[:16]
+            new_articles.append({
+                "title": title,
+                "link": entry.link.strip(),
+                "meta": f"{pub} • {published}" if published else pub
+            })
+        if new_articles:
+            data["news"] = new_articles
+            print(f"Loaded {len(new_articles)} news items from {source_name}")
+            break
     except Exception as e:
         print(f"News error ({source_name}):", e)
 
-# 2. Fetch Obec Zelenec News (scans main content area & headings on zelenec.cz)
+# 2. Fetch Obec Zelenec News with exact dates & title deduplication
 try:
     vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
     soup = BeautifulSoup(vr.text, "html.parser")
     new_village = []
-    seen = set()
+    seen_titles = set()
 
-    # Check links inside <main>, <article>, or headings first (avoids top nav menu)
     container = soup.find("main") or soup
-    skip_words = {"přeskočit", "zastupitelstvo", "výbory", "veřejné zakázky", "hospodaření", "vyhlášky", "povinně", "mstětice", "kontakty", "úřední deska", "aktuality", "kalendář", "fotogalerie"}
+    skip_words = {
+        "přeskočit", "zastupitelstvo", "výbory", "veřejné zakázky", "hospodaření",
+        "vyhlášky", "povinně", "mstětice", "kontakty", "úřední deska", "aktuality",
+        "kalendář", "fotogalerie", "ohlášení nedostatků"
+    }
+
     for a in container.find_all("a", href=True):
         href = a["href"]
         title = " ".join(a.get_text().split())
@@ -69,16 +76,32 @@ try:
             and "filter-" not in href
             and "page=" not in href
         ):
+            # Look inside parent card/container for a Czech date (e.g. 24. 10. 2026)
+            date_str = "Obec Zeleneč"
+            parent = a.find_parent(["article", "li", "div"])
+            for _ in range(3):
+                if not parent:
+                    break
+                m = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", parent.get_text(" ", strip=True))
+                if m:
+                    date_str = m.group(1)
+                    break
+                parent = parent.parent
+
+            # Strip date if it was inside the link text itself
+            clean_title = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
             link = "https://zelenec.cz" + href
-            if link not in seen:
-                seen.add(link)
+
+            if clean_title not in seen_titles and len(clean_title) > 10:
+                seen_titles.add(clean_title)
                 new_village.append({
-                    "title": title,
+                    "title": clean_title,
                     "link": link,
-                    "date": "Obec Zeleneč"
+                    "date": date_str
                 })
                 if len(new_village) >= 6:
                     break
+
     if new_village:
         data["village"] = new_village
 except Exception as e:
