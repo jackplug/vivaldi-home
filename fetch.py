@@ -9,18 +9,21 @@ HEADERS = {
 
 # 1. Fetch Live Zelenec Trains from Sprava zeleznic Station Board
 try:
-    tr = requests.get("https://provoz.spravazeleznic.cz/tabule/Pages/StationTable.aspx?Key=5111", headers=HEADERS, timeout=15)
+    tr = requests.get("https://spravazeleznic.cz", headers=HEADERS, timeout=15)
+    print("SZ Trains HTTP:", tr.status_code)
     if tr.status_code == 200:
         soup = BeautifulSoup(tr.text, "html.parser")
         for row in soup.select("table tr"):
             cols = [c.get_text(" ", strip=True) for c in row.find_all("td")]
-            # Columns: [0]=Pravidelny (HH:MM), [1]=Aktualni (HH:MM or empty), [3]=Vlak, [4]=Linka, [6]=Cil
-            if len(cols) >= 7 and re.match(r"^\d{1,2}:\d{2}$", cols):
-                sched = cols
-                actual = cols if re.match(r"^\d{1,2}:\d{2}$", cols) else ""
-                line = cols or cols
-                dest = cols
-                # Calculate delay in minutes if actual time differs from scheduled
+            # Find first column matching HH:MM
+            times = [c for c in cols if re.match(r"^\d{1,2}:\d{2}$", c)]
+            if times and len(cols) >= 5:
+                sched = times[0]
+                actual = times[1] if len(times) > 1 else ""
+                # Filter out empty/time cells to find train number, line, and destination
+                text_cols = [c for c in cols if c and not re.match(r"^\d{1,2}:\d{2}$", c)]
+                train_id = text_cols[0] if len(text_cols) > 0 else ""
+                dest = text_cols[-1] if len(text_cols) > 1 else ""
                 delay_min = 0
                 if actual and actual != sched:
                     sh, sm = map(int, sched.split(":"))
@@ -30,8 +33,7 @@ try:
                         delay_min += 1440
                 data["trains"].append({
                     "time": actual or sched,
-                    "sched": sched,
-                    "train": f"{line} ({cols})".strip(),
+                    "train": train_id,
                     "dest": dest,
                     "delay": max(0, delay_min)
                 })
@@ -42,7 +44,8 @@ except Exception as e:
 
 # 2. Fetch Zelenec Village News
 try:
-    vr = requests.get("https://www.zelenec.cz/aktuality", headers=HEADERS, timeout=15)
+    vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
+    print("Zelenec HTTP:", vr.status_code)
     if vr.status_code == 200:
         soup = BeautifulSoup(vr.text, "html.parser")
         seen = set()
@@ -50,11 +53,10 @@ try:
             href = a["href"]
             if "/aktuality/" in href and len(href) > 15 and "page=" not in href:
                 title = " ".join(a.get_text().split())
-                # Strip leading date if embedded in link text (e.g. "05. 11. 2026 Title")
                 date_match = re.search(r"(\d{1,2}\.\s*\d{1,2}\.\s*\d{4})", title)
                 date_str = date_match.group(1) if date_match else "Obec Zeleneč"
                 clean_title = re.sub(r"^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}\s*", "", title).strip()
-                link = href if href.startswith("http") else "https://www.zelenec.cz" + href
+                link = href if href.startswith("http") else "https://zelenec.cz" + href
                 if len(clean_title) > 8 and link not in seen:
                     seen.add(link)
                     data["village"].append({"title": clean_title, "link": link, "date": date_str})
@@ -84,7 +86,7 @@ for source_name, url in [("Radio Prague", "https://radio.cz"), ("Expats.cz", "ht
     except Exception as e:
         print(f"News fetch error ({url}):", e)
 
-# 4. Fetch Weather Backup (Zelenec & Prague)
+# 4. Fetch Weather Backup (Zelenec & Prague) — Fixed [0] indexing on daily arrays
 for key, lat, lon in [("zelenec", 50.130, 14.666), ("prague", 50.075, 14.437)]:
     try:
         wr = requests.get(
@@ -96,8 +98,8 @@ for key, lat, lon in [("zelenec", 50.130, 14.666), ("prague", 50.075, 14.437)]:
             data["weather"][key] = {
                 "temp": round(wj["current"]["temperature_2m"]),
                 "code": wj["current"]["weather_code"],
-                "max": round(wj["daily"]["temperature_2m_max"]),
-                "min": round(wj["daily"]["temperature_2m_min"])
+                "max": round(wj["daily"]["temperature_2m_max"][0]),
+                "min": round(wj["daily"]["temperature_2m_min"][0])
             }
     except Exception as e:
         print(f"Weather fetch error ({key}):", e)
