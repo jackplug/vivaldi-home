@@ -4,9 +4,45 @@
   "news": [],
   "weather": {},
   "errors": [
-    "Weather (zelenec): label too long",
-    "Weather (prague): label too long",
-    "News: HTTP Error 403: Forbidden"
+    "Weather (zelenec): Expecting value: line 1 column 1 (char 0)",
+    "Weather (prague): Expecting value: line 1 column 1 (char 0)"
   ],
-  "updated": "2026-11-07 20:04 UTC"
+  "debug": {
+    "sz_rows": [],
+    "zelenec_links": [
+      {
+        "text": "Přeskočit hlavní menu",
+        "href": "#menu-jump"
+      },
+      {
+        "text": "Zastupitelstvo obce",
+        "href": "/zastupitelstvo-obce"
+      },
+      {
+        "text": "Výbory zastupitelstva",
+        "href": "/vybory-zastupitelstva"
+      },
+      {
+        "text": "Veřejné zakázky, poptávky",
+        "href": "/verejne-zakazky-poptavky"
+      },
+      {
+        "text": "Hospodaření obce",
+        "href": "/hospodareni-obce"
+      },
+      {
+        "text": "Vyhlášky a nařízení",
+        "href": "/vyhlasky-a-narizeni"
+      },
+      {
+        "text": "Povinně zveřejňované informace",
+        "href": "/povinne-zverejnovane-informace"
+      },
+      {
+        "text": "Místní část Mstětice",
+        "href": "/mistni-cast-mstetice"
+      }
+    ]
+  },
+  "updated": "2026-11-07 20:41 UTC"
 }
