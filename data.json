@@ -3,5 +3,10 @@
   "village": [],
   "news": [],
   "weather": {},
-  "updated": "2026-11-07 20:01 UTC"
+  "errors": [
+    "Weather (zelenec): label too long",
+    "Weather (prague): label too long",
+    "News: HTTP Error 403: Forbidden"
+  ],
+  "updated": "2026-11-07 20:04 UTC"
 }
