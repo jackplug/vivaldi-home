@@ -21,59 +21,24 @@ HEADERS = {
     "Accept-Language": "cs-CZ,cs;q=0.9,en;q=0.8"
 }
 
-def translate_cs_to_en(text):
-    if not text:
-        return ""
-    try:
-        host = "translate." + "googleapis" + ".com"
-        url = "https://" + host + "/translate_a/single"
-        r = requests.get(
-            url,
-            params={"client": "gtx", "sl": "cs", "tl": "en", "dt": "t", "q": text},
-            timeout=10
-        )
-        if r.status_code == 200:
-            raw = r.json()
-            if isinstance(raw, list) and len(raw) > 0 and isinstance(raw.pop(0), list):
-                pass
-            # Re-parse cleanly without mutating
-            raw = r.json()
-            sentences = raw[0] if isinstance(raw, list) and raw else []
-            translated = "".join(s[0] for s in sentences if isinstance(s, list) and s and isinstance(s[0], str))
-            if translated.strip():
-                return translated.strip()
-    except Exception as e:
-        print("Translate error:", e)
-    return text
-
 # 1. Fetch English Czech News
 rp_url = "https://" + "english.radio.cz" + "/rcz-rss/en"
-gn_url = "https://" + "://google.com" + "/rss/search?q=Czechia+OR+Prague&hl=en-US&gl=US&ceid=US:en"
+try:
+    feed = feedparser.parse(rp_url)
+    new_articles = []
+    for entry in feed.entries[:8]:
+        published = getattr(entry, "published", "")[:16]
+        new_articles.append({
+            "title": entry.title.strip(),
+            "link": entry.link.strip(),
+            "meta": f"Radio Prague • {published}" if published else "Radio Prague"
+        })
+    if new_articles:
+        data["news"] = new_articles
+except Exception as e:
+    print("News error:", e)
 
-for source_name, url in [("Radio Prague", rp_url), ("Czech News", gn_url)]:
-    try:
-        feed = feedparser.parse(url)
-        new_articles = []
-        for entry in feed.entries[:8]:
-            raw_title = entry.title.strip()
-            if source_name == "Czech News" and " - " in raw_title:
-                parts = raw_title.rsplit(" - ", 1)
-                title, pub = parts[0], parts[1]
-            else:
-                title, pub = raw_title, source_name
-            published = getattr(entry, "published", "")[:16]
-            new_articles.append({
-                "title": title,
-                "link": entry.link.strip(),
-                "meta": f"{pub} • {published}" if published else pub
-            })
-        if new_articles:
-            data["news"] = new_articles
-            break
-    except Exception as e:
-        print(f"News error ({source_name}):", e)
-
-# 2. Fetch Obec Zelenec News + Perex + Translate Both to English
+# 2. Fetch Obec Zelenec News + Perex
 try:
     vr = requests.get("https://zelenec.cz", headers=HEADERS, timeout=15)
     soup = BeautifulSoup(vr.text, "html.parser")
@@ -127,12 +92,9 @@ try:
 
             if clean_cz not in seen_titles and len(clean_cz) > 10:
                 seen_titles.add(clean_cz)
-                en_title = translate_cs_to_en(clean_cz)
-                en_perex = translate_cs_to_en(perex_cz) if perex_cz else ""
                 new_village.append({
-                    "title": en_title,
-                    "cz": clean_cz,
-                    "summary": en_perex,
+                    "title": clean_cz,
+                    "summary": perex_cz,
                     "link": link,
                     "date": date_str
                 })
