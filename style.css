@@ -505,12 +505,12 @@ h2 > span:last-child {
   color: #f7768e;
 }
 
-a.task-title {
-  color: inherit;
+.task-title a {
+  color: var(--text);
   text-decoration: none;
-  display: block;
+  font-weight: 600;
 }
 
-a.task-title:hover {
-  color: var(--accent, #7aa2f7);
+.task-title a:hover {
+  color: var(--accent);
 }
