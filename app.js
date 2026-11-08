@@ -10,11 +10,9 @@ const NATURE_IDS = [
   28,   // Deep evergreen forest
   29,   // Snow-capped mountain peaks
   37,   // Moody coastal shoreline
-  43,   // Mountain lake & pines
   54,   // Mountain ridge & clouds
   57,   // Alpine peaks at dusk
   70,   // Sunlight through forest trees
-  84,   // Dramatic sea cliffs
   110,  // Golden field & distant hills
   124,  // Calm ocean & rocky shore
   142   // Rolling mountain range
@@ -26,9 +24,10 @@ function applyWallpaper(forceRandom = false) {
     document.body.style.backgroundImage = `url("${savedBg}")`;
     return;
   }
-  const randomId = NATURE_IDS[Math.floor(Math.random() * NATURE_IDS.length)];
+  const idx = Math.floor(Math.random() * NATURE_IDS.length);
+  const randomId = NATURE_IDS.at(idx);
   const host = "picsum" + ".photos";
-  const bgUrl = `https://${host}/id/${randomId}/2000/1200`;
+  const bgUrl = "https://" + host + "/id/" + randomId + "/2000/1200";
   document.body.style.backgroundImage = `url("${bgUrl}")`;
 }
 applyWallpaper();
