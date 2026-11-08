@@ -319,7 +319,17 @@ function renderTasks(tasks) {
     const infoDiv = document.createElement('div');
     const titleDiv = document.createElement('div');
     titleDiv.className = 'task-title';
-    titleDiv.textContent = task.title || 'Untitled Task';
+
+    if (task.link) {
+      const a = document.createElement('a');
+      a.href = task.link;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = task.title || 'Untitled Task';
+      titleDiv.appendChild(a);
+    } else {
+      titleDiv.textContent = task.title || 'Untitled Task';
+    }
 
     const sourceDiv = document.createElement('div');
     sourceDiv.className = 'task-source';
