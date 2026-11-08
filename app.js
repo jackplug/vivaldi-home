@@ -197,6 +197,6 @@ fetch(dataUrl.toString())
         </div>`;
     }));
 
-    const fbSection = fbItems.length ? `<div class="fb-divider">Facebook Updates</div>${fbItems.join("")}` : "";
-    document.getElementById("village").innerHTML = (villageItems.join("") || "<p class='muted-msg'>No village news found.</p>") + fbSection;
+    document.getElementById("village-web").innerHTML = villageItems.join("") || "<p class='muted-msg'>No website news found.</p>";
+    document.getElementById("village-fb").innerHTML = fbItems.join("") || "<p class='muted-msg'>No Facebook posts found.</p>";
   });
