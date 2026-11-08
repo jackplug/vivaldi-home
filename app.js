@@ -1,19 +1,49 @@
-// 0. Clock & Background Wallpaper
-const DEFAULT_BG = ["https:/", "://unsplash.com", "photo-1519677100203-a0e668c92439?auto=format&fit=crop&w=2000&q=80"].join("/");
+// 0. Clock & Random Nature Wallpaper (Forests, Mountains, Coastlines)
+const NATURE_IDS = [
+  10,   // Misty pine forest
+  11,   // Forest valley & river
+  13,   // Rocky ocean coast
+  14,   // Coastal cliffs & sea
+  15,   // Forest waterfall
+  16,   // Calm misty sea horizon
+  17,   // Green woodland path
+  28,   // Deep evergreen forest
+  29,   // Snow-capped mountain peaks
+  37,   // Moody coastal shoreline
+  43,   // Mountain lake & pines
+  54,   // Mountain ridge & clouds
+  57,   // Alpine peaks at dusk
+  70,   // Sunlight through forest trees
+  84,   // Dramatic sea cliffs
+  110,  // Golden field & distant hills
+  124,  // Calm ocean & rocky shore
+  142   // Rolling mountain range
+];
 
-function applyWallpaper() {
-  const savedBg = localStorage.getItem("custom_bg") || DEFAULT_BG;
-  document.body.style.backgroundImage = `url("${savedBg}")`;
+function applyWallpaper(forceRandom = false) {
+  const savedBg = !forceRandom ? localStorage.getItem("custom_bg") : null;
+  if (savedBg) {
+    document.body.style.backgroundImage = `url("${savedBg}")`;
+    return;
+  }
+  const randomId = NATURE_IDS[Math.floor(Math.random() * NATURE_IDS.length)];
+  const host = "picsum" + ".photos";
+  const bgUrl = `https://${host}/id/${randomId}/2000/1200`;
+  document.body.style.backgroundImage = `url("${bgUrl}")`;
 }
 applyWallpaper();
 
 function changeWallpaper() {
   const current = localStorage.getItem("custom_bg") || "";
-  const url = prompt("Paste a direct image URL (leave blank to reset to Prague/Czechia default):", current);
+  const url = prompt("Paste a custom image URL (or leave blank for automatic random nature photos):", current);
   if (url === null) return;
-  if (url.trim()) localStorage.setItem("custom_bg", url.trim());
-  else localStorage.removeItem("custom_bg");
-  applyWallpaper();
+  if (url.trim()) {
+    localStorage.setItem("custom_bg", url.trim());
+    applyWallpaper();
+  } else {
+    localStorage.removeItem("custom_bg");
+    applyWallpaper(true);
+  }
 }
 
 function updateClock() {
