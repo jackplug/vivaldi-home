@@ -151,21 +151,22 @@ function loadTrains() {
         }
 
         const subLine = isTrain && trainNum && trainNum !== line
-          ? `<span class="train-num">• ${trainNum}</span>`
+          ? `<span class="train-num">${trainNum}</span>`
           : "";
 
         return `
           <div class="train-row">
             <div class="train-time">${time}</div>
             <div class="train-info">
-              <div class="train-dest">${dest} ${dirTag}</div>
-              <div class="train-meta">
+              <div class="train-top">
                 <span class="${badgeClass}">${modeIcon} ${line}</span>
-                ${subLine}
+                <span class="train-dest">${dest}</span>
               </div>
+              ${subLine || dirTag ? `<div class="train-meta">${subLine}${dirTag}</div>` : ""}
             </div>
             <div class="${delay > 0 ? 'badge-delay' : 'badge-ok'}">${delay > 0 ? '+' + delay + ' min' : 'On time'}</div>
           </div>`;
+
       }).join("") || "<p class='muted-msg'>No departures in next 2 hours.</p>";
     })
     .catch(err => {
