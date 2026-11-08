@@ -42,27 +42,36 @@ body::before {
   z-index: -1;
 }
 
-
 .top-bar {
   max-width: 1400px;
   margin: 0 auto 1.25rem auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+}
+
+.top-bar > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
 }
 
 .clock {
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
 }
 
 .clock-date {
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.92);
   margin-left: 0.65rem;
-  font-weight: 400;
+  font-weight: 500;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
 }
 
 .grid {
@@ -94,7 +103,24 @@ h2 {
   padding-bottom: 0.65rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+/* Keeps emojis/icons aligned in their own column when title text wraps */
+h2 > span:first-child {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  line-height: 1.3;
+}
+
+h2 > span:last-child {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
 .section-spacer {
