@@ -336,11 +336,17 @@ h2 > span:last-child {
 }
 
 /* Train vs. Bus Badges & Direction Tags */
+.train-top {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .train-meta {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  margin-top: 0.22rem;
+  margin-top: 0.25rem;
 }
 
 .mode-badge {
@@ -372,8 +378,6 @@ h2 > span:last-child {
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 4px;
-  margin-left: 0.35rem;
-  vertical-align: middle;
 }
 
 .dir-prg {
