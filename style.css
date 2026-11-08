@@ -110,9 +110,10 @@ h2 {
 /* Keeps emojis/icons aligned in their own column when title text wraps */
 h2 > span:first-child {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.45rem;
   line-height: 1.3;
+  white-space: nowrap;
 }
 
 h2 > span:last-child {
@@ -345,3 +346,29 @@ h2 > span:last-child {
   }
 }
 
+@media (max-width: 600px) {
+  body {
+    padding: 0.85rem;
+  }
+  .grid {
+    gap: 1rem;
+  }
+  .card {
+    padding: 1.1rem;
+    border-radius: 14px;
+  }
+  .top-bar {
+    align-items: flex-start;
+  }
+  .clock-date {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.15rem;
+  }
+  .btn-label {
+    display: none;
+  }
+  h2 > span:first-child {
+    white-space: normal;
+  }
+}
