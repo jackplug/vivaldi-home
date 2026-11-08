@@ -232,3 +232,114 @@ fetch(dataUrl.toString())
     document.getElementById("village-web").innerHTML = villageItems.join("") || "<p class='muted-msg'>No website news found.</p>";
     document.getElementById("village-fb").innerHTML = fbItems.join("") || "<p class='muted-msg'>No Facebook posts found.</p>";
   });
+
+// tasks
+const TASKS_CACHE_KEY = 'vivaldi_tasks_cache';
+const TASKS_TTL_MS = 30 * 60 * 1000;
+
+function configureTasksEndpoint() {
+  const currentUrl = localStorage.getItem('gas_tasks_url') || '';
+  const url = prompt('Enter your Google Apps Script Web App URL:', currentUrl);
+  if (url === null) return;
+
+  const currentToken = localStorage.getItem('gas_tasks_token') || '';
+  const token = prompt('Enter your CLIENT_TOKEN passphrase:', currentToken);
+  if (token === null) return;
+
+  localStorage.setItem('gas_tasks_url', url.trim());
+  localStorage.setItem('gas_tasks_token', token.trim());
+  localStorage.removeItem(TASKS_CACHE_KEY);
+  loadActionItems(true);
+}
+
+async function loadActionItems(forceRefresh = false) {
+  const statusEl = document.getElementById('tasks-status');
+  const listEl = document.getElementById('tasks-list');
+  const scriptUrl = localStorage.getItem('gas_tasks_url');
+  const token = localStorage.getItem('gas_tasks_token');
+
+  if (!scriptUrl || !token) {
+    statusEl.textContent = 'Click ⚙ to connect your private Gmail endpoint.';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  if (!forceRefresh) {
+    const cachedRaw = localStorage.getItem(TASKS_CACHE_KEY);
+    if (cachedRaw) {
+      const cached = JSON.parse(cachedRaw);
+      if (Date.now() - cached.timestamp < TASKS_TTL_MS) {
+        renderTasks(cached.tasks);
+        return;
+      }
+    }
+  }
+
+  statusEl.textContent = 'Scanning recent emails...';
+  listEl.innerHTML = '';
+
+  try {
+    const reqUrl = new URL(scriptUrl);
+    reqUrl.searchParams.set('token', token);
+
+    const response = await fetch(reqUrl.toString());
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    const tasks = Array.isArray(data.tasks) ? data.tasks : Array.of();
+    localStorage.setItem(TASKS_CACHE_KEY, JSON.stringify({
+      timestamp: Date.now(),
+      tasks: tasks
+    }));
+
+    renderTasks(tasks);
+  } catch (err) {
+    statusEl.textContent = `Error: ${err.message}`;
+  }
+}
+
+function renderTasks(tasks) {
+  const statusEl = document.getElementById('tasks-status');
+  const listEl = document.getElementById('tasks-list');
+  listEl.innerHTML = '';
+
+  if (!tasks || tasks.length === 0) {
+    statusEl.textContent = 'No pending action items found.';
+    return;
+  }
+
+  statusEl.textContent = '';
+  tasks.forEach(task => {
+    const li = document.createElement('li');
+    li.className = `task-item ${task.urgency === 'high' ? 'high' : 'normal'}`;
+
+    const infoDiv = document.createElement('div');
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'task-title';
+    titleDiv.textContent = task.title || 'Untitled Task';
+
+    const sourceDiv = document.createElement('div');
+    sourceDiv.className = 'task-source';
+    sourceDiv.textContent = task.source || 'Gmail';
+
+    infoDiv.appendChild(titleDiv);
+    infoDiv.appendChild(sourceDiv);
+    li.appendChild(infoDiv);
+
+    if (task.due) {
+      const dueSpan = document.createElement('span');
+      dueSpan.className = 'task-due';
+      dueSpan.textContent = task.due;
+      li.appendChild(dueSpan);
+    }
+
+    listEl.appendChild(li);
+  });
+}
+
+document.getElementById('config-tasks-btn')?.addEventListener('click', configureTasksEndpoint);
+document.getElementById('refresh-tasks-btn')?.addEventListener('click', () => loadActionItems(true));
+document.addEventListener('DOMContentLoaded', () => loadActionItems(false));
