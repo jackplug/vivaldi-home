@@ -17,7 +17,7 @@
   </div>
 
   <div class="grid">
-    <!-- Column 1: Trains -->
+    <!-- Card 1: Trains -->
     <div class="card">
       <h2>
         <span>🚆 Zeleneč Departures</span>
@@ -29,7 +29,7 @@
       <div id="trains">Loading departures...</div>
     </div>
 
-    <!-- Column 2: Weather & Obec Zeleneč -->
+    <!-- Card 2: Weather Only -->
     <div class="card">
       <h2>
         <span>🌤️ Weather Forecast</span>
@@ -39,18 +39,30 @@
         <div class="weather-box">Loading Zeleneč...</div>
         <div class="weather-box">Loading Prague...</div>
       </div>
-
-      <h2 class="section-spacer">
-        <span>🏘️ Obec Zeleneč</span>
-        <a class="btn-small" href="https://facebook.com" target="_blank">Facebook ↗</a>
-      </h2>
-      <div id="village">Loading village news...</div>
     </div>
 
-    <!-- Column 3: Czech News -->
+    <!-- Card 3: Czech News -->
     <div class="card">
       <h2>🇨🇿 Czech News (EN)</h2>
       <div id="news">Loading Czech news...</div>
+    </div>
+
+    <!-- Card 4: Wide Obec Zeleneč Card (Spans 2 Columns) -->
+    <div class="card span-2">
+      <h2>
+        <span>🏘️ Obec Zeleneč</span>
+        <a class="btn-small" href="https://facebook.com" target="_blank">Facebook ↗</a>
+      </h2>
+      <div class="village-split">
+        <div>
+          <div class="sub-header">Official Website</div>
+          <div id="village-web">Loading website news...</div>
+        </div>
+        <div class="village-col-right">
+          <div class="sub-header">Facebook Updates</div>
+          <div id="village-fb">Loading Facebook posts...</div>
+        </div>
+      </div>
     </div>
   </div>
 
