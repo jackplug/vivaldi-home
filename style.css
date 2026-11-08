@@ -107,10 +107,10 @@ h2 {
   gap: 0.6rem;
 }
 
-/* Keeps emojis/icons aligned in their own column when title text wraps */
 h2 > span:first-child {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
+  align-self: center;
   gap: 0.45rem;
   line-height: 1.3;
   white-space: nowrap;
@@ -129,12 +129,16 @@ h2 > span:last-child {
 }
 
 .btn-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 4px 9px;
   font-size: 0.72rem;
+  line-height: 1.2;
   cursor: pointer;
   text-decoration: none;
   transition: all 0.15s ease;
