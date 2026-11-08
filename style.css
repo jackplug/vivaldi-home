@@ -431,3 +431,77 @@ h2 > span:last-child {
     white-space: normal;
   }
 }
+
+
+.card-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  color: inherit;
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.icon-btn:hover {
+  background: rgba(122, 162, 247, 0.2);
+  border-color: var(--accent, #7aa2f7);
+}
+
+.tasks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-left: 3px solid var(--accent, #7aa2f7);
+  border-radius: 8px;
+}
+
+.task-item.high {
+  border-left-color: #f7768e;
+}
+
+.task-title {
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.task-source {
+  font-size: 0.76rem;
+  opacity: 0.7;
+  margin-top: 0.15rem;
+}
+
+.task-due {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(122, 162, 247, 0.16);
+  color: var(--accent, #7aa2f7);
+}
+
+.task-item.high .task-due {
+  background: rgba(247, 118, 142, 0.18);
+  color: #f7768e;
+}
+
