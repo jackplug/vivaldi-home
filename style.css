@@ -335,6 +335,57 @@ h2 > span:last-child {
   margin-bottom: 0.45rem;
 }
 
+/* Train vs. Bus Badges & Direction Tags */
+.train-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.22rem;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.mode-train {
+  background: rgba(122, 162, 247, 0.2);
+  color: #93c5fd;
+  border: 1px solid rgba(122, 162, 247, 0.35);
+}
+
+.mode-bus {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+}
+
+.dir-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.dir-prg {
+  background: rgba(158, 206, 106, 0.14);
+  color: #9ece6a;
+}
+
+.dir-east {
+  background: rgba(187, 154, 247, 0.14);
+  color: #bb9af7;
+}
+
 @media (max-width: 900px) {
   .span-2 {
     grid-column: span 1;
