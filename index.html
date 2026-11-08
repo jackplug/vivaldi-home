@@ -72,18 +72,19 @@
       </div>
     </div>
 
-    <section class="card" id="action-items-card">
-      <div class="card-header">
-        <h2>New emails</h2>
-        <div class="card-actions">
-          <button id="refresh-tasks-btn" class="pill-btn" title="Refresh Emails">Refresh ↻</button>
-          <button id="config-tasks-btn" class="pill-btn" title="Configure Gmail Endpoint">Setup ⚙</button>
-        </div>
+    <div class="card" id="action-items-card">
+      <h2>
+        <span><span>✉️</span><span>New Emails</span></span>
+        <span class="card-btn-group">
+          <button id="refresh-tasks-btn" class="btn-small" title="Refresh Emails">Refresh ↻</button>
+          <button id="config-tasks-btn" class="btn-small" title="Configure Gmail Endpoint">Setup ⚙</button>
+        </span>
+      </h2>
+      <div>
+        <div id="tasks-status" class="status-text">Checking emails...</div>
+        <ul id="tasks-list" class="tasks-list"></ul>
       </div>
-      <div id="tasks-status" class="status-text">Checking emails...</div>
-      <ul id="tasks-list" class="tasks-list"></ul>
-    </section>
-  </div>
+    </div>
 
   <script src="./app.js"></script>
 </body>
