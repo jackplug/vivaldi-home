@@ -26,15 +26,22 @@ body {
   transition: background-image 0.4s ease;
 }
 
-/* Subtle dark gradient overlay so text is always readable over any photo */
+/* Light top-only fade so the clock stays readable without darkening the photo */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(10, 12, 18, 0.35) 0%, rgba(10, 12, 18, 0.72) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 12, 18, 0.58) 0%,
+    rgba(10, 12, 18, 0.18) 18%,
+    rgba(10, 12, 18, 0.05) 45%,
+    rgba(10, 12, 18, 0.15) 100%
+  );
   pointer-events: none;
   z-index: -1;
 }
+
 
 .top-bar {
   max-width: 1400px;
