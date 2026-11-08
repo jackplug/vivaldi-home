@@ -125,23 +125,54 @@ function loadTrains() {
   const u = new URL(GOLEMIO_URL);
   u.searchParams.set("names", "Zeleneč");
   u.searchParams.set("minutesAfter", "120");
-  u.searchParams.set("limit", "8");
+  u.searchParams.set("limit", "10");
 
   fetch(u.toString(), { headers: { "X-Access-Token": key } })
     .then(r => r.ok ? r.json() : Promise.reject("HTTP " + r.status))
     .then(d => {
       document.getElementById("trains").innerHTML = (d.departures || []).map(t => {
-        const line = t.route?.short_name || "Train";
+        const line = t.route?.short_name || "?";
+        const routeType = t.route?.type;
+        const isTrain = routeType === 2 || /^S\d+/i.test(line);
+        const modeIcon = isTrain ? "🚆" : "🚌";
+        const badgeClass = isTrain ? "mode-badge mode-train" : "mode-badge mode-bus";
+
         const dest = t.trip?.headsign || "";
+        const trainNum = t.trip?.short_name || "";
         const time = (t.departure_timestamp?.predicted || "").slice(11, 16);
         const delay = t.delay?.minutes || 0;
-        return `<div class="train-row"><div class="train-time">${time}</div><div class="train-info"><div class="train-dest">${dest}</div><div class="train-num">Line ${line}</div></div><div class="${delay > 0 ? 'badge-delay' : 'badge-ok'}">${delay > 0 ? '+' + delay + ' min' : 'On time'}</div></div>`;
-      }).join("") || "<p class='muted-msg'>No trains in next 2 hours.</p>";
+
+        // Detect direction (Prague vs. Lysá / East)
+        let dirTag = "";
+        if (/praha|masarykovo|hl\.n\.|vysočany|horn/i.test(dest)) {
+          dirTag = `<span class="dir-tag dir-prg">→ Prague</span>`;
+        } else if (/lysá|nymburk|milovice|čelákovice|mstětice/i.test(dest)) {
+          dirTag = `<span class="dir-tag dir-east">→ Lysá / East</span>`;
+        }
+
+        const subLine = isTrain && trainNum && trainNum !== line
+          ? `<span class="train-num">• ${trainNum}</span>`
+          : "";
+
+        return `
+          <div class="train-row">
+            <div class="train-time">${time}</div>
+            <div class="train-info">
+              <div class="train-dest">${dest} ${dirTag}</div>
+              <div class="train-meta">
+                <span class="${badgeClass}">${modeIcon} ${line}</span>
+                ${subLine}
+              </div>
+            </div>
+            <div class="${delay > 0 ? 'badge-delay' : 'badge-ok'}">${delay > 0 ? '+' + delay + ' min' : 'On time'}</div>
+          </div>`;
+      }).join("") || "<p class='muted-msg'>No departures in next 2 hours.</p>";
     })
     .catch(err => {
       document.getElementById("trains").innerHTML = `<p class="muted-msg">Train feed error (${err}).</p>`;
     });
 }
+
 loadTrains();
 
 // 3. Village, Facebook & Czech News
